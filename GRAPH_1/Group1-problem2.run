@@ -1,0 +1,485 @@
+reset;
+model parameters.mod;
+data instance-1.1.dat;
+#model Pcreation2.mod;
+param demand default 0;
+param target default 0;
+param source default 0;
+#model Group1-problem2.mod;
+print("DATA1");
+
+
+#option solver gurobi;
+param iter default 0;        # Number of iterations
+param flag default 0;        # At least a new column has been added
+
+#add new node
+param nb_r;
+let nb_r := nb_n+1;
+
+set Nr := 1..nb_r;
+set Ap within Nr cross Nr;
+let Ap := A;
+
+# Number and set of paths
+param n_c default 0; 
+set P := 1..n_c;
+set Path {P} within Nr cross Nr;
+param orig  {P} within Nr;  # Origin
+param dest  {P} within Nr;  # Destination
+
+display A;
+display Ap;
+
+# Add arcs from existing nodes to the new node
+
+for {i in N} {
+
+    #let Ap[length] := Ap union {(i, nb_r)};
+    let Ap := Ap union {(i, nb_r)};
+    let Ap := Ap union {(nb_r, i)};
+    #let Ap[length] := (i, nb_r);
+
+}
+display Ap;
+
+#create parameters for new node and existing node
+param tu{Ap} default 0;
+param fn{Nr,Nr};
+param deltan{Nr,Nr};
+
+for {(i,j) in Ap}
+{
+	let tu[i,j]:=u*alfa;
+}
+
+for {(i,j) in A}
+{
+	let fn[i,j]:=f[i,j];
+	let deltan[i,j]:=delta[i,j];
+}
+
+display fn;
+#let f[1,2]:=u*alfa*100;
+#display f;
+
+#for the links to new node, add big capacity, big cost, and 0 delay
+for {i in 1..nb_n}{
+
+	#tu news arcs
+	let tu[nb_r,i]:=u*alfa*100;
+	let tu[i,nb_r]:=u*alfa*100;
+	#fn news arcs cost
+	let fn[nb_r,i]:=2000;
+	let fn[i,nb_r]:=2000;
+	#deltan news arcs delay
+	let deltan[nb_r,i]:=0;
+	let deltan[i,nb_r]:=0;
+}
+
+display tu;
+display fn;
+display deltan;
+
+
+
+model Pcreation2.mod;
+model Group1-problem2.mod;
+
+problem pcreation: y, pathz, p1, p2, balancing;
+
+problem pcreation;
+option solver gurobi;
+
+#problem master;
+#option solver gurobi;
+
+#problem pricing;
+#option solver gurobi;
+
+
+#create first set of paths	
+for{k in K}{
+	#model Pcreation.mod;
+	let source := s[k];
+	let target := t[k];
+	let demand := d[k];
+	
+	
+	solve pcreation;
+	#solve;
+	display {(i,j) in Ap:y[i,j] ==1};
+	let n_c := n_c + 1;
+	let Path[n_c] := {(i,j) in Ap: y[i,j] = 1}; 
+	
+	for {(i,j) in Ap:y[i,j] ==1}{
+		#let P := P union {(i,j)};
+		let tu[i,j] := tu[i,j]-demand;
+	}
+	display tu;
+	display demand;
+	#break;
+	#new
+	let cp[n_c] := d[k]*sum {(i,j) in Path[n_c]} fn[i,j]; #calculate the total cost of the path			
+	let orig[n_c] := s[k];
+	let dest[n_c] := t[k];
+	
+
+
+	}
+display P;
+display Path;
+
+#do the master and pricing until finding optimal solution
+repeat {   
+   let iter := iter + 1;
+   problem master;
+   option solver gurobi;
+   solve master;
+   display x;
+
+  printf "\nIter %d: Master problem objective function %.3f\n\n", iter, PathCost;
+  printf"\n Used paths: \n";
+
+  for{p in 1..n_c}{
+	if(x[p] > 0) then{
+	for {(i,j) in Path[p]}
+              printf "(%d,%d) ", i, j;
+           printf "%7.3f, ", x[p];
+	   printf " - reduced cost %7.3f \n", x[p].rc; #.rc is for reduced cost
+	}
+	else{
+	   printf "( Not Used ";
+	   for {(i,j) in Path[p]}
+              printf "(%d,%d) ", i, j;
+           printf "%7.3f", x[p];
+	   printf " - reduced cost %7.3f )\n", x[p].rc; 
+
+	}
+  }
+  
+
+   printf"\n\n";
+
+   # Use the dual variables to set the objective function costs of the pricing subproblem	
+   let{(i,j) in Ap} g[i,j] := fn[i,j] - PathCapacity[i,j].dual; #c[i,j] - mi[i,j]
+   let {k in K} sigma[k]   := PathBalance[k].dual;
+
+
+   let flag := 0;
+
+   # Solve a pricing subproblem for each commodity
+   printf"\n pricing problems\n";
+   for {k in K} {
+       let source := s[k];
+       let target := t[k];
+		problem pricing;
+		option solver gurobi;
+       solve pricing;
+
+	# Check the reduced cost	
+	printf "\n\n\n commodity %d: shortest path %d, sigma %d \n", k,ShortestPath, sigma[k];
+	if sigma[k] > ShortestPath then { 
+	   let n_c := n_c + 1;
+	   let Path[n_c] := {(i,j) in Ap: z[i,j] = 1}; 
+	  #let cp[n_c] := sum {(i,j) in Path[n_p]} c[i,j];	
+	   #let cp[n_c] := d[k]*sum {(i,j) in Path[n_c]} fn[i,j];	
+	   let cp[n_c] := sum {(i,j) in Path[n_c]} fn[i,j];	
+	   let orig[n_c] := s[k];
+	   let dest[n_c] := t[k];
+	   #let del[n_c] := sum {(i,j) in Path[n_c]} deltan[i,j];#NEWWWWWWWW was not used
+	   let flag := 1;
+	   printf "\t\t reduced cost = %7.3f |", ShortestPath-sigma[k];
+	   for {(i,j) in Path[n_c]}
+              printf "(%d,%d) ", i, j;
+           printf "\n\n\n";
+	}
+   }
+   printf "----------------------------------------\n\n";
+} until (flag=0) ;
+
+problem master;
+solve master;
+
+printf "\n\n Final Master Problem Obj = %7.3f\n", PathCost;
+printf"\nUsed paths: \n";
+for{p in 1..n_c}{
+	if(x[p] > 0) then{
+	for {(i,j) in Path[p]}
+              printf "(%d,%d) ", i, j;
+           printf "%7.3f, \n", x[p];
+	}
+}
+
+
+  for{k in K}{
+  	printf"\n Demand %d, from %d to %d: list of used paths \n",k, s[k],t[k];
+  	for{p in 1..n_c}{
+		if(x[p] > 0 and s[k] = orig[p] and t[k] = dest[p]) then{    
+			for {(i,j) in Path[p]}
+              printf "(%d,%d) ", i, j;
+           printf "%7.3f, ", x[p];
+	   	   printf " cost %7.3f \n", cp[p]; 
+		}
+   
+    }
+   
+  }
+printf"\n\n  solve time %f\n", _solve_time;
+#printf"\n\n  TOTAL solve time %f\n", _total_solve_elapsed_time;
+printf"\n\n  TOTAL solve time %f\n", _total_solve_time;
+
+
+print("FIN");
+print("########################################");
+printf"\n\n";
+
+
+
+#do the same for the second dat file
+reset;
+model parameters.mod;
+data instance-1.2.dat;
+
+param demand default 0;
+param target default 0;
+param source default 0;
+
+print("DATA2");
+
+
+#option solver gurobi;
+param iter default 0;        # Number of iterations
+param flag default 0;        # At least a new column has been added
+#add new node
+param nb_r;
+let nb_r := nb_n+1;
+
+set Nr := 1..nb_r;
+set Ap within Nr cross Nr;
+let Ap := A;
+
+# Number and set of paths
+param n_c default 0; 
+set P := 1..n_c;
+set Path {P} within Nr cross Nr;
+param orig  {P} within Nr;  # Origin
+param dest  {P} within Nr;  # Destination
+
+display A;
+display Ap;
+
+# Add arcs from existing nodes to the new node
+
+
+
+for {i in N} {
+
+    #let Ap[length] := Ap union {(i, nb_r)};
+    let Ap := Ap union {(i, nb_r)};
+    let Ap := Ap union {(nb_r, i)};
+    #let Ap[length] := (i, nb_r);
+
+}
+display Ap;
+
+param tu{Ap} default 0;
+param fn{Nr,Nr};
+param deltan{Nr,Nr};
+
+for {(i,j) in Ap}
+{
+	let tu[i,j]:=u*alfa;
+}
+
+for {(i,j) in A}
+{
+	let fn[i,j]:=f[i,j];
+	let deltan[i,j]:=delta[i,j];
+}
+
+display fn;
+#let f[1,2]:=u*alfa*100;
+#display f;
+
+for {i in 1..nb_n}{
+
+	#tu news arcs
+	let tu[nb_r,i]:=u*alfa*100;
+	let tu[i,nb_r]:=u*alfa*100;
+	#fn news arcs
+	let fn[nb_r,i]:=2000;
+	let fn[i,nb_r]:=2000;
+	#deltan news arcs
+	let deltan[nb_r,i]:=0;
+	let deltan[i,nb_r]:=0;
+}
+
+display tu;
+display fn;
+display deltan;
+
+
+
+model Pcreation2.mod;
+model Group1-problem2.mod;
+
+#param n_c default 0;#why???????????????????
+
+#let n_p:=; 
+#set P := {};
+#set Path {P} within N cross N;
+#display P;
+
+#set P := 1..n_c;
+#set Path {P} within N cross N;
+
+problem pcreation: y, pathz, p1, p2, balancing;
+
+problem pcreation;
+option solver gurobi;
+
+#problem master;
+#option solver gurobi;
+
+#problem pricing;
+#option solver gurobi;
+
+
+#create PATHZZZZ	
+for{k in K}{
+	#model Pcreation.mod;
+	let source := s[k];
+	let target := t[k];
+	let demand := d[k];
+	
+	
+	solve pcreation;
+	#solve;
+	display {(i,j) in Ap:y[i,j] ==1};
+	let n_c := n_c + 1;
+	let Path[n_c] := {(i,j) in Ap: y[i,j] = 1}; 
+	
+	for {(i,j) in Ap:y[i,j] ==1}{
+		#let P := P union {(i,j)};
+		let tu[i,j] := tu[i,j]-demand;
+	}
+	display tu;
+	display demand;
+	#break;
+	#new
+	let cp[n_c] := d[k]*sum {(i,j) in Path[n_c]} fn[i,j];			
+	let orig[n_c] := s[k];
+	let dest[n_c] := t[k];
+	#let del[n_c] := sum {(i,j) in Path[n_c]} delta[i,j];#NEWWWWWWWW
+	
+
+
+	}
+display P;
+display Path;
+
+
+repeat {   
+   let iter := iter + 1;
+   problem master;
+   option solver gurobi;
+   solve master;
+   display x;
+
+  printf "\nIter %d: Master problem objective function %.3f\n\n", iter, PathCost;
+  printf"\n Used paths: \n";
+
+  for{p in 1..n_c}{
+	if(x[p] > 0) then{
+	for {(i,j) in Path[p]}
+              printf "(%d,%d) ", i, j;
+           printf "%7.3f, ", x[p];
+	   printf " - reduced cost %7.3f \n", x[p].rc; #.rc is for reduced cost
+	}
+	else{
+	   printf "( Not Used ";
+	   for {(i,j) in Path[p]}
+              printf "(%d,%d) ", i, j;
+           printf "%7.3f", x[p];
+	   printf " - reduced cost %7.3f )\n", x[p].rc; 
+
+	}
+  }
+  
+
+   printf"\n\n";
+
+   # Use the dual variables to set the objective function costs of the pricing subproblem	
+   #let {(i,j) in A} g[i,j] := c[i,j] - PathCapacity[i,j].dual;
+   #let{(i,j) in Ap} g[i,j] := fn[i,j]*(sum{k in K,p in P: orig[p] = s[k] and dest[p] = t[k]}d[k]*x[p]) - PathCapacity[i,j].dual;
+   let{(i,j) in Ap} g[i,j] := fn[i,j] - PathCapacity[i,j].dual;
+   let {k in K} sigma[k]   := PathBalance[k].dual;
+   #let {k in K} sigma[k]   := PathBalance[k].dual+delay[k].dual;
+
+   let flag := 0;
+
+   # Solve a pricing subproblem for each commodity
+   printf"\n pricing problems\n";
+   for {k in K} {
+       let source := s[k];
+       let target := t[k];
+		problem pricing;
+		option solver gurobi;
+       solve pricing;
+
+	# Check the reduced cost	
+	printf "\n\n\n commodity %d: shortest path %d, sigma %d \n", k,ShortestPath, sigma[k];
+	if sigma[k] > ShortestPath then { 
+	   let n_c := n_c + 1;
+	   let Path[n_c] := {(i,j) in Ap: z[i,j] = 1}; 
+	  #let cp[n_c] := sum {(i,j) in Path[n_p]} c[i,j];	
+	   #let cp[n_c] := d[k]*sum {(i,j) in Path[n_c]} fn[i,j];	
+	   let cp[n_c] := sum {(i,j) in Path[n_c]} fn[i,j];			
+	   let orig[n_c] := s[k];
+	   let dest[n_c] := t[k];
+	   #let del[n_c] := sum {(i,j) in Path[n_c]} deltan[i,j];#NEWWWWWWWW
+	   let flag := 1;
+	   printf "\t\t reduced cost = %7.3f |", ShortestPath-sigma[k];
+	   for {(i,j) in Path[n_c]}
+              printf "(%d,%d) ", i, j;
+           printf "\n\n\n";
+	}
+   }
+   printf "----------------------------------------\n\n";
+} until (flag=0) ;
+
+problem master;
+solve master;
+
+printf "\n\n Final Master Problem Obj = %7.3f\n", PathCost;
+printf"\nUsed paths: \n";
+for{p in 1..n_c}{
+	if(x[p] > 0) then{
+	for {(i,j) in Path[p]}
+              printf "(%d,%d) ", i, j;
+           printf "%7.3f, \n", x[p];
+	}
+}
+
+
+  for{k in K}{
+  	printf"\n Demand %d, from %d to %d: list of used paths \n",k, s[k],t[k];
+  	for{p in 1..n_c}{
+		if(x[p] > 0 and s[k] = orig[p] and t[k] = dest[p]) then{    
+			for {(i,j) in Path[p]}
+              printf "(%d,%d) ", i, j;
+           printf "%7.3f, ", x[p];
+	   	   printf " cost %7.3f \n", cp[p]; 
+		}
+   
+    }
+   
+  }
+printf"\n\n  solve time %f\n", _solve_time;
+#printf"\n\n  TOTAL solve time %f\n", _total_solve_elapsed_time;
+printf"\n\n  TOTAL solve time %f\n", _total_solve_time;
+
+
+
+

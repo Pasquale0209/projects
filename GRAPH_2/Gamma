@@ -1,0 +1,300 @@
+sum{i in Iset: dmin[i] == j} t[i] = 212
+
+sum{i in Iset: dmin[i] == j} t[i] = 4991
+
+sum{i in Iset: dmin[i] == j} t[i] = 175
+
+sum{i in Iset: dmin[i] == j} t[i] = 147
+
+sum{i in Iset: dmin[i] == j} t[i] = 651
+
+sum{i in Iset: dmin[i] == j} t[i] = 3670
+
+sum{i in Iset: dmin[i] == j} t[i] = 131
+
+sum{i in Iset: dmin[i] == j} t[i] = 235
+
+sum{i in Iset: dmin[i] == j} t[i] = 81
+
+sum{i in Iset: dmin[i] == j} t[i] = 51
+
+sum{i in Iset: dmin[i] == j} t[i] = 330
+
+sum{i in Iset: dmin[i] == j} t[i] = 226
+
+sum{i in Iset: dmin[i] == j} t[i] = 922
+
+sum{i in Iset: dmin[i] == j} t[i] = 839
+
+sum{i in Iset: dmin[i] == j} t[i] = 1479
+
+sum{i in Iset: dmin[i] == j} t[i] = 1301
+
+sum{i in Iset: dmin[i] == j} t[i] = 565
+
+sum{i in Iset: dmin[i] == j} t[i] = 122
+
+sum{i in Iset: dmin[i] == j} t[i] = 1484
+
+sum{i in Iset: dmin[i] == j} t[i] = 237
+
+sum{i in Iset: dmin[i] == j} t[i] = 8100
+
+sum{i in Iset: dmin[i] == j} t[i] = 137
+
+sum{i in Iset: dmin[i] == j} t[i] = 6913
+
+sum{i in Iset: dmin[i] == j} t[i] = 99
+
+sum{i in Iset: dmin[i] == j} t[i] = 130
+
+sum{i in Iset: dmin[i] == j} t[i] = 1019
+
+sum{i in Iset: dmin[i] == j} t[i] = 128
+
+sum{i in Iset: dmin[i] == j} t[i] = 198
+
+sum{i in Iset: dmin[i] == j} t[i] = 3224
+
+sum{i in Iset: dmin[i] == j} t[i] = 205
+
+sum{i in Iset: dmin[i] == j} t[i] = 129
+
+sum{i in Iset: dmin[i] == j} t[i] = 194
+
+sum{i in Iset: dmin[i] == j} t[i] = 89
+
+sum{i in Iset: dmin[i] == j} t[i] = 1228
+
+sum{i in Iset: dmin[i] == j} t[i] = 370
+
+sum{i in Iset: dmin[i] == j} t[i] = 294
+
+sum{i in Iset: dmin[i] == j} t[i] = 4690
+
+sum{i in Iset: dmin[i] == j} t[i] = 3916
+
+sum{i in Iset: dmin[i] == j} t[i] = 1473
+
+sum{i in Iset: dmin[i] == j} t[i] = 469
+
+sum{i in Iset: dmin[i] == j} t[i] = 4244
+
+sum{i in Iset: dmin[i] == j} t[i] = 1709
+
+sum{i in Iset: dmin[i] == j} t[i] = 353
+
+sum{i in Iset: dmin[i] == j} t[i] = 71
+
+sum{i in Iset: dmin[i] == j} t[i] = 73
+
+sum{i in Iset: dmin[i] == j} t[i] = 638
+
+sum{i in Iset: dmin[i] == j} t[i] = 3427
+
+sum{i in Iset: dmin[i] == j} t[i] = 1039
+
+sum{i in Iset: dmin[i] == j} t[i] = 94
+
+sum{i in Iset: dmin[i] == j} t[i] = 1462
+
+sum{i in Iset: dmin[i] == j} t[i] = 212
+
+sum{i in Iset: dmin[i] == j} t[i] = 5375
+
+sum{i in Iset: dmin[i] == j} t[i] = 175
+
+sum{i in Iset: dmin[i] == j} t[i] = 147
+
+sum{i in Iset: dmin[i] == j} t[i] = 1144
+
+sum{i in Iset: dmin[i] == j} t[i] = 4561
+
+sum{i in Iset: dmin[i] == j} t[i] = 131
+
+sum{i in Iset: dmin[i] == j} t[i] = 293
+
+sum{i in Iset: dmin[i] == j} t[i] = 81
+
+sum{i in Iset: dmin[i] == j} t[i] = 51
+
+sum{i in Iset: dmin[i] == j} t[i] = 330
+
+sum{i in Iset: dmin[i] == j} t[i] = 226
+
+sum{i in Iset: dmin[i] == j} t[i] = 922
+
+sum{i in Iset: dmin[i] == j} t[i] = 839
+
+sum{i in Iset: dmin[i] == j} t[i] = 1628
+
+sum{i in Iset: dmin[i] == j} t[i] = 1301
+
+sum{i in Iset: dmin[i] == j} t[i] = 634
+
+sum{i in Iset: dmin[i] == j} t[i] = 122
+
+sum{i in Iset: dmin[i] == j} t[i] = 1856
+
+sum{i in Iset: dmin[i] == j} t[i] = 237
+
+sum{i in Iset: dmin[i] == j} t[i] = 0
+
+sum{i in Iset: dmin[i] == j} t[i] = 137
+
+sum{i in Iset: dmin[i] == j} t[i] = 8065
+
+sum{i in Iset: dmin[i] == j} t[i] = 179
+
+sum{i in Iset: dmin[i] == j} t[i] = 130
+
+sum{i in Iset: dmin[i] == j} t[i] = 1132
+
+sum{i in Iset: dmin[i] == j} t[i] = 128
+
+sum{i in Iset: dmin[i] == j} t[i] = 198
+
+sum{i in Iset: dmin[i] == j} t[i] = 3751
+
+sum{i in Iset: dmin[i] == j} t[i] = 275
+
+sum{i in Iset: dmin[i] == j} t[i] = 129
+
+sum{i in Iset: dmin[i] == j} t[i] = 194
+
+sum{i in Iset: dmin[i] == j} t[i] = 159
+
+sum{i in Iset: dmin[i] == j} t[i] = 1303
+
+sum{i in Iset: dmin[i] == j} t[i] = 370
+
+sum{i in Iset: dmin[i] == j} t[i] = 541
+
+sum{i in Iset: dmin[i] == j} t[i] = 5329
+
+sum{i in Iset: dmin[i] == j} t[i] = 4939
+
+sum{i in Iset: dmin[i] == j} t[i] = 1473
+
+sum{i in Iset: dmin[i] == j} t[i] = 469
+
+sum{i in Iset: dmin[i] == j} t[i] = 4666
+
+sum{i in Iset: dmin[i] == j} t[i] = 1788
+
+sum{i in Iset: dmin[i] == j} t[i] = 353
+
+sum{i in Iset: dmin[i] == j} t[i] = 157
+
+sum{i in Iset: dmin[i] == j} t[i] = 73
+
+sum{i in Iset: dmin[i] == j} t[i] = 638
+
+sum{i in Iset: dmin[i] == j} t[i] = 4299
+
+sum{i in Iset: dmin[i] == j} t[i] = 1268
+
+sum{i in Iset: dmin[i] == j} t[i] = 94
+
+sum{i in Iset: dmin[i] == j} t[i] = 1462
+
+sum{i in Iset: dmin[i] == j} t[i] = 212
+
+sum{i in Iset: dmin[i] == j} t[i] = 5997
+
+sum{i in Iset: dmin[i] == j} t[i] = 175
+
+sum{i in Iset: dmin[i] == j} t[i] = 147
+
+sum{i in Iset: dmin[i] == j} t[i] = 1317
+
+sum{i in Iset: dmin[i] == j} t[i] = 5922
+
+sum{i in Iset: dmin[i] == j} t[i] = 131
+
+sum{i in Iset: dmin[i] == j} t[i] = 438
+
+sum{i in Iset: dmin[i] == j} t[i] = 81
+
+sum{i in Iset: dmin[i] == j} t[i] = 51
+
+sum{i in Iset: dmin[i] == j} t[i] = 330
+
+sum{i in Iset: dmin[i] == j} t[i] = 226
+
+sum{i in Iset: dmin[i] == j} t[i] = 922
+
+sum{i in Iset: dmin[i] == j} t[i] = 839
+
+sum{i in Iset: dmin[i] == j} t[i] = 2101
+
+sum{i in Iset: dmin[i] == j} t[i] = 1301
+
+sum{i in Iset: dmin[i] == j} t[i] = 634
+
+sum{i in Iset: dmin[i] == j} t[i] = 122
+
+sum{i in Iset: dmin[i] == j} t[i] = 2228
+
+sum{i in Iset: dmin[i] == j} t[i] = 237
+
+sum{i in Iset: dmin[i] == j} t[i] = 0
+
+sum{i in Iset: dmin[i] == j} t[i] = 137
+
+sum{i in Iset: dmin[i] == j} t[i] = 0
+
+sum{i in Iset: dmin[i] == j} t[i] = 179
+
+sum{i in Iset: dmin[i] == j} t[i] = 130
+
+sum{i in Iset: dmin[i] == j} t[i] = 1132
+
+sum{i in Iset: dmin[i] == j} t[i] = 210
+
+sum{i in Iset: dmin[i] == j} t[i] = 198
+
+sum{i in Iset: dmin[i] == j} t[i] = 4133
+
+sum{i in Iset: dmin[i] == j} t[i] = 458
+
+sum{i in Iset: dmin[i] == j} t[i] = 129
+
+sum{i in Iset: dmin[i] == j} t[i] = 194
+
+sum{i in Iset: dmin[i] == j} t[i] = 159
+
+sum{i in Iset: dmin[i] == j} t[i] = 1673
+
+sum{i in Iset: dmin[i] == j} t[i] = 370
+
+sum{i in Iset: dmin[i] == j} t[i] = 703
+
+sum{i in Iset: dmin[i] == j} t[i] = 6000
+
+sum{i in Iset: dmin[i] == j} t[i] = 5727
+
+sum{i in Iset: dmin[i] == j} t[i] = 1603
+
+sum{i in Iset: dmin[i] == j} t[i] = 469
+
+sum{i in Iset: dmin[i] == j} t[i] = 4829
+
+sum{i in Iset: dmin[i] == j} t[i] = 2342
+
+sum{i in Iset: dmin[i] == j} t[i] = 524
+
+sum{i in Iset: dmin[i] == j} t[i] = 157
+
+sum{i in Iset: dmin[i] == j} t[i] = 73
+
+sum{i in Iset: dmin[i] == j} t[i] = 891
+
+sum{i in Iset: dmin[i] == j} t[i] = 5037
+
+sum{i in Iset: dmin[i] == j} t[i] = 1540
+
+sum{i in Iset: dmin[i] == j} t[i] = 94
+
+sum{i in Iset: dmin[i] == j} t[i] = 1462
+

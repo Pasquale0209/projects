@@ -1,0 +1,68 @@
+reset;
+model parameters.mod;
+data instance4.dat;
+param maxd; #is the maximum distance 
+############################################
+#COMPUTING THE MAXIMUM DISTANCE GLOBALLY 
+let maxd:=0;
+for{(i,j) in A}{
+	if lenght[i,j]>maxd then{
+			let maxd:=lenght[i,j];
+		}
+}
+
+
+param counter default 0;
+
+# Set of indices for the cuts inequalities
+set C := 0..counter;
+set S{C};
+
+for {i in N}
+{
+	for {j in N:j!=i and j>i}
+	{
+		let S[counter] := {i} union {j};
+		let counter := counter + 1; 
+	}
+} 
+let counter := counter - 1; 
+#display S; 
+model q33.mod;
+
+
+
+printf"DATA 1";
+printf"\n\n";
+
+option solver gurobi;
+solve;
+#timessss
+/*
+#printf"  CPU time %g\n", _ampl_elapsed_time;
+printf"  Computational Time %g\n",_ampl_user_time; 
+
+printf"\n Solution details: \n";
+
+for{k in K}{
+ 
+ 	printf"\n demand %d from %d to %d:\n", k , s[k], t[k];
+	for{(i,j) in A}{
+	
+		if(x[i,j,k] > 0) then
+ 			printf "\t arc (%d,%d) (%g)", i, j, x[i,j,k];
+
+	}
+}
+printf"\n\n";
+
+for{i in N}{
+	if(y[i] >= 1) then
+ 		printf "\n Node (%d) has amplifier", i;
+ 		
+}
+
+*/
+
+printf"\n\n";
+printf "##############\n";

@@ -1,0 +1,95 @@
+reset;
+model parameters.mod;
+model Pcreation.mod;
+model Group1-problem2.mod;
+data instance-1.1.dat;
+
+
+#option solver gurobi;
+
+
+
+for {(i,j) in A}
+{
+	let tu[i,j]:=u*alfa;
+}
+
+#param n_c default 0;#why???????????????????
+
+#let n_p:=; 
+#set P := {};
+#set Path {P} within N cross N;
+#display P;
+
+#set P := 1..n_c;
+#set Path {P} within N cross N;
+
+problem pcreation: y, pathz, p1, p2, balancing;
+
+problem pcreation;
+option solver gurobi;
+
+problem master;
+option solver gurobi;
+
+problem pricing;
+option solver gurobi;
+
+
+#create PATHZZZZ	
+
+
+
+for{k in K}{
+	#model Pcreation.mod;
+	let source := s[k];
+	let target := t[k];
+	let demand := d[k];
+	
+	
+	#solve pcreation;
+	# Check if the problem is infeasible
+	try {
+    	solve pcreation;
+	} except {
+    	printf "The problem is infeasible.\n";
+	}
+
+	#solve;
+	display {(i,j) in A:y[i,j] ==1};
+	let n_c := n_c + 1;
+	let Path[n_c] := {(i,j) in A: y[i,j] = 1}; 
+	
+	for {(i,j) in A:y[i,j] ==1}{
+		#let P := P union {(i,j)};
+		let tu[i,j] := tu[i,j]-demand;
+	}
+	#display tu;
+	#display demand;
+	#break;
+	#new
+	let cp[n_c] := sum {(i,j) in Path[n_c]} f[i,j]*d[k];			
+	let orig[n_c] := s[k];
+	let dest[n_c] := t[k];
+	let del[n_c] := sum {(i,j) in Path[n_c]} delta[i,j];#NEWWWWWWWW
+	
+
+
+	}
+	
+	
+
+		
+display P;
+display Path;
+	
+	
+
+#solve master;
+#display master.dual;
+#nuevo?
+
+# Compute the cost of the initial set of paths,already done in the for
+#let {p in P} cp[p] := sum {(i,j) in Path[p]} c[i,j];
+
+

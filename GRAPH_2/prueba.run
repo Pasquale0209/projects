@@ -1,0 +1,83 @@
+reset;
+model parameters.mod;
+#model q1.mod;
+model q4.mod;
+
+data ass2-6.dat;
+
+printf"DATA 1";
+printf"\n\n";
+
+ #datat1
+ /*
+fix y[1]:=1;
+fix y[2]:=1;
+fix y[3]:=0;
+fix y[4]:=0;
+fix y[5]:=0;
+fix y[6]:=1;
+fix y[7]:=1;
+fix y[8]:=0;
+fix y[9]:=1;
+fix y[10]:=1; 
+ */
+ 
+
+
+for {i in Jset:i!=21 and i!=23 }{
+	fix y[i]:=1;
+}
+fix y[21]:=0;
+fix y[23]:=0;
+
+
+
+/*#data2
+fix y[1]:=1;
+fix y[3]:=1;
+fix y[5]:=1;
+fix y[6]:=1;
+fix y[7]:=1;
+fix y[10]:=1;
+*/
+
+#dat3
+/*
+
+fix y[1]:=1;
+fix y[2]:=1;
+fix y[3]:=1;
+fix y[4]:=1;
+fix y[5]:=1;
+fix y[6]:=1;
+fix y[7]:=1;
+fix y[8]:=1;
+fix y[9]:=1;
+fix y[10]:=1;
+*/
+
+
+option solver gurobi;
+#fix y[21]:=0;
+solve;
+printf"  CPU time %g\n", _ampl_elapsed_time;
+#printf"\n Selected Centers (J): \n";
+#for{i in Jset}{
+#	if(y[i] =1) then
+#		printf"\t %d\n", i;
+#}
+
+printf"\n Solution details: \n";
+	for{index in Jset}{
+		if (y[index] > 0) then{
+			printf"\n Center %d ", index;
+			printf"\t Townships(I): ";
+			for{terminalindex in Iset}{
+				if(x[terminalindex, index] > 0) then{
+					printf" %d \t", terminalindex ;
+				}
+			}
+		}	
+	}
+	printf"\n\n";
+printf"\n\n";

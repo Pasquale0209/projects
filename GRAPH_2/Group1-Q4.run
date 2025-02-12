@@ -1,0 +1,389 @@
+reset;
+model parameters.mod;
+
+
+data ass2-1.dat;
+
+printf"DATA 1";
+printf"\n\n";
+
+param maxd; #is the maximum distance 
+#COMPUTING THE MAXIMUM DISTANCE GLOBALLY 
+let maxd:=0;
+for {i in Iset}{
+	for {j in Jset}{
+		if d[i,j]>maxd then{
+			let maxd:=d[i,j];
+		}
+	}
+}
+display maxd;
+/*
+param mind default 100000;
+param dmin{Iset} default 0;
+
+for{i in Iset}{
+	let dmin[i]:=mind;
+	for{j in Jset}{
+		if d[i,j]<dmin[i] then {
+			let dmin[i]:=d[i,j];
+			#print(j);
+		}
+	}
+}
+#display dmin;
+*/
+
+model q4.mod;
+option solver gurobi;
+solve;
+
+#timessss
+
+#printf"  CPU time %g\n", _ampl_elapsed_time;
+printf"  Computational Time %g\n",_ampl_user_time; 
+#printf"\n Selected Centers (J): \n";
+#for{i in Jset}{
+#	if(y[i] =1) then
+#		printf"\t %d\n", i;
+#}
+
+printf"\n Solution details: \n";
+	for{index in Jset}{
+		if (y[index] > 0) then{
+			printf"\n Center %d ", index;
+			printf"\t Townships(I): ";
+			for{terminalindex in Iset}{
+				if(x[terminalindex, index] > 0) then{
+					printf" %d \t", terminalindex ;
+				}
+			}
+		}	
+	}
+	printf"\n\n";
+printf"\n\n";
+printf "##############\n";
+
+
+reset;
+model parameters.mod;
+
+
+data ass2-2.dat;
+
+printf"DATA 2";
+printf"\n\n";
+
+param maxd; #is the maximum distance 
+#COMPUTING THE MAXIMUM DISTANCE GLOBALLY 
+let maxd:=0;
+for {i in Iset}{
+	for {j in Jset}{
+		if d[i,j]>maxd then{
+			let maxd:=d[i,j];
+		}
+	}
+}
+display maxd;
+/*
+param mind default 100000;
+param dmin{Iset} default 0;
+
+for{i in Iset}{
+	let dmin[i]:=mind;
+	for{j in Jset}{
+		if d[i,j]<dmin[i] then {
+			let dmin[i]:=d[i,j];
+			#print(j);
+		}
+	}
+}
+#display dmin;
+*/
+
+model q4.mod;
+option solver gurobi;
+solve;
+
+#printf"  CPU time %g\n", _ampl_elapsed_time;
+printf"  Computational Time %g\n",_ampl_user_time; 
+#printf"\n Selected Centers (J): \n";
+#for{i in Jset}{
+#	if(y[i] =1) then
+#		printf"\t %d\n", i;
+#}
+
+printf"\n Solution details: \n";
+	for{index in Jset}{
+		if (y[index] > 0) then{
+			printf"\n Center %d ", index;
+			printf"\t Townships(I): ";
+			for{terminalindex in Iset}{
+				if(x[terminalindex, index] > 0) then{
+					printf" %d \t", terminalindex ;
+				}
+			}
+		}	
+	}
+	printf"\n\n";
+printf"\n\n";
+printf "##############\n";
+
+
+
+reset;
+model parameters.mod;
+
+
+data ass2-3.dat;
+
+printf"DATA 3";
+printf"\n\n";
+
+param maxd; #is the maximum distance 
+#COMPUTING THE MAXIMUM DISTANCE GLOBALLY 
+let maxd:=0;
+for {i in Iset}{
+	for {j in Jset}{
+		if d[i,j]>maxd then{
+			let maxd:=d[i,j];
+		}
+	}
+}
+display maxd;
+/*
+param mind default 100000;
+param dmin{Iset} default 0;
+
+for{i in Iset}{
+	let dmin[i]:=mind;
+	for{j in Jset}{
+		if d[i,j]<dmin[i] then {
+			let dmin[i]:=d[i,j];
+			#print(j);
+		}
+	}
+}
+#display dmin;
+*/
+
+model q4.mod;
+option solver gurobi;
+solve;
+
+#TIMESSS
+#printf"  CPU time %g\n", _ampl_elapsed_time;
+printf"  Computational Time %g\n",_ampl_user_time; 
+
+#printf"\n Selected Centers (J): \n";
+#for{i in Jset}{
+#	if(y[i] =1) then
+#		printf"\t %d\n", i;
+#}
+
+printf"\n Solution details: \n";
+	for{index in Jset}{
+		if (y[index] > 0) then{
+			printf"\n Center %d ", index;
+			printf"\t Townships(I): ";
+			for{terminalindex in Iset}{
+				if(x[terminalindex, index] > 0) then{
+					printf" %d \t", terminalindex ;
+				}
+			}
+		}	
+	}
+	printf"\n\n";
+printf"\n\n";
+printf "##############\n";
+
+reset;
+model parameters.mod;
+
+
+data ass2-4.dat;
+
+printf"DATA 4";
+printf"\n\n";
+
+param maxd; #is the maximum distance 
+#COMPUTING THE MAXIMUM DISTANCE GLOBALLY 
+let maxd:=0;
+for {i in Iset}{
+	for {j in Jset}{
+		if d[i,j]>maxd then{
+			let maxd:=d[i,j];
+		}
+	}
+}
+display maxd;
+/*
+param mind default 100000;
+param dmin{Iset} default 0;
+
+for{i in Iset}{
+	let dmin[i]:=mind;
+	for{j in Jset}{
+		if d[i,j]<dmin[i] then {
+			let dmin[i]:=d[i,j];
+			#print(j);
+		}
+	}
+}
+#display dmin;
+*/
+
+model q4.mod;
+option solver gurobi;
+solve;
+
+#printf"  CPU time %g\n", _ampl_elapsed_time;
+printf"  Computational Time %g\n",_ampl_user_time; 
+#printf"\n Selected Centers (J): \n";
+#for{i in Jset}{
+#	if(y[i] =1) then
+#		printf"\t %d\n", i;
+#}
+
+printf"\n Solution details: \n";
+	for{index in Jset}{
+		if (y[index] > 0) then{
+			printf"\n Center %d ", index;
+			printf"\t Townships(I): ";
+			for{terminalindex in Iset}{
+				if(x[terminalindex, index] > 0) then{
+					printf" %d \t", terminalindex ;
+				}
+			}
+		}	
+	}
+	printf"\n\n";
+printf"\n\n";
+printf "##############\n";
+
+reset;
+model parameters.mod;
+
+
+data ass2-5.dat;
+
+printf"DATA 5";
+printf"\n\n";
+
+param maxd; #is the maximum distance 
+#COMPUTING THE MAXIMUM DISTANCE GLOBALLY 
+let maxd:=0;
+for {i in Iset}{
+	for {j in Jset}{
+		if d[i,j]>maxd then{
+			let maxd:=d[i,j];
+		}
+	}
+}
+display maxd;
+/*
+param mind default 100000;
+param dmin{Iset} default 0;
+
+for{i in Iset}{
+	let dmin[i]:=mind;
+	for{j in Jset}{
+		if d[i,j]<dmin[i] then {
+			let dmin[i]:=d[i,j];
+			#print(j);
+		}
+	}
+}
+#display dmin;
+*/
+
+model q4.mod;
+option solver gurobi;
+solve;
+
+#printf"  CPU time %g\n", _ampl_elapsed_time;
+printf"  Computational Time %g\n",_ampl_user_time; 
+#printf"\n Selected Centers (J): \n";
+#for{i in Jset}{
+#	if(y[i] =1) then
+#		printf"\t %d\n", i;
+#}
+
+printf"\n Solution details: \n";
+	for{index in Jset}{
+		if (y[index] > 0) then{
+			printf"\n Center %d ", index;
+			printf"\t Townships(I): ";
+			for{terminalindex in Iset}{
+				if(x[terminalindex, index] > 0) then{
+					printf" %d \t", terminalindex ;
+				}
+			}
+		}	
+	}
+	printf"\n\n";
+printf"\n\n";
+printf "##############\n";
+
+reset;
+model parameters.mod;
+
+
+data ass2-6.dat;
+
+printf"DATA 6";
+printf"\n\n";
+
+param maxd; #is the maximum distance 
+#COMPUTING THE MAXIMUM DISTANCE GLOBALLY 
+let maxd:=0;
+for {i in Iset}{
+	for {j in Jset}{
+		if d[i,j]>maxd then{
+			let maxd:=d[i,j];
+		}
+	}
+}
+display maxd;
+/*
+param mind default 100000;
+param dmin{Iset} default 0;
+
+for{i in Iset}{
+	let dmin[i]:=mind;
+	for{j in Jset}{
+		if d[i,j]<dmin[i] then {
+			let dmin[i]:=d[i,j];
+			#print(j);
+		}
+	}
+}
+#display dmin;
+*/
+
+model q4.mod;
+option solver gurobi;
+solve;
+
+#printf"  CPU time %g\n", _ampl_elapsed_time;
+printf"  Computational Time %g\n",_ampl_user_time; 
+#printf"\n Selected Centers (J): \n";
+#for{i in Jset}{
+#	if(y[i] =1) then
+#		printf"\t %d\n", i;
+#}
+
+printf"\n Solution details: \n";
+	for{index in Jset}{
+		if (y[index] > 0) then{
+			printf"\n Center %d ", index;
+			printf"\t Townships(I): ";
+			for{terminalindex in Iset}{
+				if(x[terminalindex, index] > 0) then{
+					printf" %d \t", terminalindex ;
+				}
+			}
+		}	
+	}
+	printf"\n\n";
+printf"\n\n";

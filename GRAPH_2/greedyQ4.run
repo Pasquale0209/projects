@@ -1,0 +1,122 @@
+reset; 
+
+option solver gurobi; 
+
+model parameters.mod;
+model q4.mod; 
+data ass2-6.dat; 
+#this parameters can be removed
+set minimum_costs default {}; 
+set minimum_distances default {};
+param min_cost_value; 
+param min_distance_value; 
+param minimum_demand; 
+param iter;
+param flag_center; #parameter for looping through the centers
+param flag_total; 
+let flag_center := 0; 
+let flag_total := 0; 
+
+set served_towns default {};
+param available_capacity; 
+param served; 
+
+#AUXILIARY DISTANCES , can be omitted
+param aux_d{Iset, Jset}; 
+for {i in Iset}
+{
+	for {j in Jset}
+	{
+		let aux_d[i,j] := d[i,j];
+	}
+}
+
+#can be omitted
+#AUXILIARY COSTS AND DEMAND 
+param aux_t{Iset};
+for {i in Iset}
+{
+	let aux_t[i] := t[i];
+}
+param aux_c{Jset}; 
+for {j in Jset}
+{
+	let aux_c[j] := c[j];
+}
+
+
+let flag_center := 0; 
+let flag_total := 0; 
+let served := 0; 
+
+	
+#repeat {
+
+	#SET CAPACITY TO GAMMA 
+	let available_capacity := Gamma; 
+	display available_capacity; 
+	let min_cost_value := min{j in Jset : aux_c[j]}aux_c[j]; 
+	let minimum_costs := {j in Jset: aux_c[j] == min_cost_value};
+	display min_cost_value; 
+	#WE COMPUTE THE MINIMUM DEMAND 
+	let minimum_demand := min{i in Iset: aux_t[i]}aux_t[i]; 
+	display minimum_demand; 
+
+# We set all the centers active	
+	for {j in Jset} {
+	  let y[j]:= 1;
+	}
+	display y;
+	# We iterate over all the towns
+	for {town in Iset}
+	{
+	        # Find the index of the closest center
+			let min_distance_value := min{j in Jset : aux_d[town,j] }aux_d[town, j];
+	        
+	        # Find the value of the distances and sore the in a list
+			let minimum_distances := {j in Jset: aux_d[town,j] == min_distance_value };
+			display minimum_distances;
+			display min_distance_value;
+            
+            # Iterate over the values in minimum_distances
+			for {k in minimum_distances} {
+
+			  display available_capacity; 
+		      display t[k];
+		      let available_capacity := Gamma; 
+			  #WE CHECK IN CASE OF MULTIPLE ASSIGNMENTS 
+			  if t[k] <= available_capacity then
+			  {
+	            let x[town,k]:=1;
+			    display x;
+				let available_capacity := available_capacity - t[k];
+				let served := served + 1; 
+				let served_towns := served_towns union {k};
+				#UPDATE DEMAND 
+				display town; 
+				display k;
+			   }else{
+			      # if we have a center that cannot serve all the closest 
+			      let y[k] :=0; 
+			      let x[town,k]:=0;
+			   }			  
+			}
+		printf "TOTAL TOWNS_SERVED: \n";
+		display served; 	
+	}
+	display available_capacity; 
+	printf "FIRST SERVICE FULL\n";
+
+	
+	
+	
+#} until (iter == 1); 
+ 
+
+display objfun;
+printf "FINITO PROGRAMMA\n"; 
+display y;
+#display x;
+display objfun;
+printf"CPU time%g\n",_ampl_elapsed_time;
+

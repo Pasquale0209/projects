@@ -1,0 +1,75 @@
+reset;
+model parameters.mod;
+model Group1-problem4.mod;
+data instance-1.1.dat;
+
+option solver gurobi;
+
+solve;
+#display x;
+
+printf"\n DATA 1";
+for{k in K}{
+	
+ 
+ 	printf"\n demand %d from %d to %d:\n", k , s[k], t[k];
+	for{(i,j) in A}{
+		for{p in 1..2}{
+	
+			if(x[i,j,k,p] > 0) then{
+				printf (p);
+ 				printf "\t arc (%d,%d) (%g)\n", i, j, x[i,j,k,p];
+ 			}
+ 		}
+
+	}
+}
+
+
+printf"\n\n  solve time %f\n", _solve_time;
+#printf"\n\n  TOTAL solve time %f\n", _total_solve_elapsed_time;
+printf"\n\n  TOTAL solve time %f\n", _total_solve_time;
+
+
+printf"\n\n";
+
+print("FIN");
+print("########################################");
+
+printf"\n\n";
+
+reset;
+model parameters.mod;
+model Group1-problem4.mod;
+data instance-1.2.dat;
+
+option solver gurobi;
+
+solve;
+#display x;
+
+printf"\n DATA 2";
+for{k in K}{
+	
+ 
+ 	printf"\n demand %d from %d to %d:\n", k , s[k], t[k];
+	for{(i,j) in A}{
+				for{p in 1..2}{
+	
+			if(x[i,j,k,p] > 0) then{
+				printf (p);
+ 				printf "\t arc (%d,%d) (%g)\n", i, j, x[i,j,k,p];
+ 			}
+ 		}
+	}
+}
+
+
+printf"\n\n  solve time %f\n", _solve_time;
+#printf"\n\n  TOTAL solve time %f\n", _total_solve_elapsed_time;
+printf"\n\n  TOTAL solve time %f\n", _total_solve_time;
+
+
+printf"\n\n";
+
+print("FIN");

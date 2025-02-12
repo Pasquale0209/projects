@@ -1,0 +1,273 @@
+reset; 
+
+option solver gurobi; 
+
+model parameters.mod;
+model q1.mod; 
+data ass2-5.dat; 
+
+
+printf "DATA 1\n"; 
+
+set minimum_costs default {}; 
+set minimum_distances default {};
+set served_towns default {};
+
+param min_cost_value; 
+param min_distance_value; 
+param available_capacity; 
+
+
+#AUXILIARY DISTANCES 
+param aux_d{Iset, Jset}; 
+for {i in Iset}
+{
+	for {j in Jset}
+	{
+		let aux_d[i,j] := d[i,j];
+	}
+}
+
+#AUXILIARY COSTS AND DEMAND 
+param aux_t{Iset};
+for {i in Iset}
+{
+	let aux_t[i] := t[i];
+}
+param aux_c{Jset}; 
+for {j in Jset}
+{
+	let aux_c[j] := c[j];
+}
+
+
+param flag_center; #parameter for looping through the centers
+param flag_total; 
+param served; 
+param minimum_demand; 
+
+let flag_center := 0; 
+let flag_total := 0; 
+let served := 0; 
+
+
+#WE FIND THE MINIMUM COSTS
+	
+repeat { 
+	
+	
+	let min_cost_value := min{j in Jset : aux_c[j]}aux_c[j]; 
+	let minimum_costs := {j in Jset: aux_c[j] == min_cost_value};
+	#display min_cost_value; 
+	
+	
+	#WE TRY TO ADD SOME TOWNSHIPS 
+	for {facility in minimum_costs}
+	{
+		#printf "##############\n";
+		#display facility; 
+		let available_capacity := Gamma; #SET CAPACITY TO GAMMA
+		#printf "##############\n"; 
+		#WE COMPUTE THE MINIMUM DEMAND 
+		let minimum_demand := min{i in Iset diff served_towns: aux_t[i]}aux_t[i]; 
+		#display minimum_demand; 
+		let y[facility] := 1; 
+		repeat {
+			#WE EVALUATE BASED ON DISTANCE 
+			#display available_capacity; 
+			#display Iset diff served_towns; 
+			let min_distance_value := min{i in Iset diff served_towns: aux_d[i,facility] and aux_t[i] <= available_capacity}aux_d[i, facility];
+	
+			#let minimum_distances := {i in Iset: aux_d[i,facility] == min_distance_value };
+			let minimum_distances := {i in Iset diff served_towns: aux_d[i,facility] == min_distance_value };
+			#display minimum_distances;
+			#display min_distance_value; 
+			
+			if card(minimum_distances) == 0 then 
+			{
+				break;
+			} 
+	
+			for {dmd in minimum_distances}
+			{
+				#printf "##########\n";
+				#display available_capacity;
+				#display t[dmd];
+				#display dmd; 
+				#printf "##########\n";
+				
+				#WE CHECK IN CASE OF MULTIPLE ASSIGNMENTS 
+				if t[dmd] <= available_capacity then
+				{
+					let available_capacity := available_capacity - t[dmd];
+					#UPDATE DEMAND 
+					#display facility; 
+					#display dmd; 
+					
+					let aux_d[dmd, facility] := 1000000;
+					let x[dmd, facility] := 1; 
+					let served := served + 1; 
+					let served_towns := served_towns union {dmd};
+				}
+				
+				if served == I then 
+				#if card(served_towns) == I then 
+				{
+					let flag_total := 1; 
+					break; 
+				}
+			}
+			
+			if flag_total == 1 then 
+				break; 
+			
+		} until (available_capacity <= minimum_demand);
+	
+		#printf "TOTAL TOWNS_SERVED: \n";
+		#display served; 
+		let aux_c[facility]:= 100000; 
+		
+		if flag_total == 1 then 
+			break; 
+	}
+	#display available_capacity; 
+	#printf "FIRST SERVICE FULL\n";
+
+	
+	
+	
+} until (flag_total != 0); 
+ 
+
+
+printf "FINITO PROGRAMMA\n"; 
+	
+
+printf "Heuristic objective function: \n"; 
+
+#display sum{j in Jset}c[j]*y[j]+sum{i in Iset, j in Jset}x[i,j]*d[i,j]*t[i];
+display objfun;
+	
+
+
+
+
+printf"CPU time%g\n",_ampl_user_time;  
+
+# NOW WE WANT TO IMPROVE THE SOLUTION
+# IN ORDER TO DO SO WE'LL USE AN AUXILIARY VARIABLE 
+# FOR STORING THE VALUES OF THE x AND y 
+
+param aux_x{Iset, Jset}; 
+param aux_y{Iset};
+
+for {i in Iset}
+{
+	for {j in Jset}
+	{
+		let aux_x[i,j] := x[i,j];
+	}
+}
+
+for {j in Jset}
+{
+	let aux_y[j] := y[j];
+}
+
+#THEN WE ALSO NEED A VARIABLE FOR THE CURRENT OBJECTIVE FUNCTION
+
+param to_improve; 
+let to_improve := objfun; 
+display objfun; 
+
+
+#For each activated js 
+set active_center; 
+let active_center := {j in Jset: y[j] = 1}; 
+display active_center; 
+set town_first; 
+set town_second; 
+param residual_capacity_1;
+param residual_capacity_2; 
+param obj_value; 
+let obj_value := to_improve;  
+param improvement; 
+
+for{1..3}{
+for {center_1 in active_center}
+{
+	#let town_first := {k in Iset: x[k,center_1] = 1}; 
+	for {center_2 in active_center}
+	{
+		#we break if they are the same since we cannot improve 
+		#the solution
+		if center_1 == center_2 then 
+			continue; 
+			
+		
+		
+		for {town_1 in Iset: x[town_1, center_1] == 1}
+		{
+			#let town_second := {k in Iset: x[k,center_2] = 1}; 
+			for {town_2 in Iset: x[town_2, center_2] == 1}
+			{
+				
+				#BEFORE DOING THE CHANGE WE WANT TO CHECK 
+				# WHETER THE SOLUTION WILL BE IMPROVING 
+				# TO DO THIS WE NEED TO CHECK THAT THE SUM 
+				# OF THE t*d WILL BECOME SLOWER AND IT IS FEASIBLE
+				let residual_capacity_1 := Gamma - sum{z in Iset: x[z, center_1] == 1}t[z] + t[town_1];
+				let residual_capacity_2 := Gamma - sum{z in Iset: x[z, center_2] == 1}t[z] + t[town_2];
+
+				if residual_capacity_1 + t[town_2] <= Gamma and residual_capacity_2 + t[town_1] <= Gamma then 
+				{
+					#Is the solution improving the t*d
+					#IMPROVEMENT WILL BE NEGATIVE IF IT IS GOOD SOLUTION 
+					let improvement := - (d[town_1,center_1]*t[town_1] + d[town_2,center_2]*t[town_2]) + (d[town_1,center_2]*t[town_1] + d[town_2,center_1]*t[town_2]);
+					if to_improve > obj_value + improvement then
+					{
+						
+						for {m in Iset}
+						{
+							for {n in Jset}
+							{
+								let aux_x[m,n] := x[m,n];
+							}
+						}
+						# We complete the swap 
+						let aux_x[town_1, center_1] := 0; 
+						let aux_x[town_1, center_2] := 1; 
+						let aux_x[town_2, center_2] := 0; 
+						let aux_x[town_2, center_1] := 1; 
+						
+						
+						let to_improve := obj_value + improvement; 
+						#display to_improve; 
+						
+						
+					}
+				}
+				else 
+				{
+					#you cannot improve
+					continue; 
+				}
+				
+			}
+
+			#PUT THE BEST SOLUTION 
+			for {m in Iset}
+			{
+				for {n in Jset}
+				{
+					let x[m,n] := aux_x[m,n];
+				}
+			}
+			let obj_value := objfun; 
+		}
+	}
+}
+}
+
+display objfun; 
+display _ampl_user_time;

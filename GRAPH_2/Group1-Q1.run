@@ -1,0 +1,235 @@
+reset;
+model parameters.mod;
+model q1.mod;
+
+data ass2-1.dat;
+
+printf"DATA 1";
+printf"\n\n";
+
+option solver gurobi;
+solve;
+#timessss
+
+#printf"  CPU time %g\n", _ampl_elapsed_time;
+printf"  Computational Time %g\n",_ampl_user_time; 
+#printf"\n Selected Centers (J): \n";
+#for{i in Jset}{
+#	if(y[i] =1) then
+#		printf"\t %d\n", i;
+#}
+
+printf"\n Solution details: \n";
+	for{index in Jset}{
+		if (y[index] > 0) then{
+			printf"\n Center %d ", index;
+			printf"\t Townships(I): ";
+			for{terminalindex in Iset}{
+				if(x[terminalindex, index] > 0) then{
+					printf" %d \t", terminalindex ;
+				}
+			}
+		}	
+	}
+	printf"\n\n";
+printf"\n\n";
+printf "##############\n";
+
+#display x;
+
+
+reset;
+model parameters.mod;
+model q1.mod;
+
+data ass2-2.dat;
+
+printf"DATA 2";
+printf"\n\n";
+
+option solver gurobi;
+solve;
+#timessss
+
+#printf"  CPU time %g\n", _ampl_elapsed_time;
+printf"  Computational Time %g\n",_ampl_user_time; 
+#printf"\n Selected Centers (J): \n";
+#for{i in Jset}{
+#	if(y[i] =1) then
+#		printf"\t %d\n", i;
+#}
+
+printf"\n Solution details: \n";
+	for{index in Jset}{
+		if (y[index] > 0) then{
+			printf"\n Center %d ", index;
+			printf"\t Townships(I): ";
+			for{terminalindex in Iset}{
+				if(x[terminalindex, index] > 0) then{
+					printf" %d \t", terminalindex ;
+				}
+			}
+		}	
+	}
+	printf"\n\n";
+printf"\n\n";
+printf "##############\n";
+
+
+reset;
+model parameters.mod;
+model q1.mod;
+
+data ass2-3.dat;
+
+printf"DATA 3";
+printf"\n\n";
+
+option solver gurobi;
+solve;
+#timessss
+
+#printf"  CPU time %g\n", _ampl_elapsed_time;
+printf"  Computational Time %g\n",_ampl_user_time; 
+#printf"\n Selected Centers (J): \n";
+#for{i in Jset}{
+#	if(y[i] =1) then
+#		printf"\t %d\n", i;
+#}
+printf"\n Solution details: \n";
+	for{index in Jset}{
+		if (y[index] > 0) then{
+			printf"\n Center %d ", index;
+			printf"\t Townships(I): ";
+			for{terminalindex in Iset}{
+				if(x[terminalindex, index] > 0) then{
+					printf" %d \t", terminalindex ;
+				}
+			}
+		}	
+	}
+	printf"\n\n";
+printf"\n\n";
+printf "##############\n";
+
+#display x;
+
+
+reset;
+model parameters.mod;
+model q1.mod;
+
+data ass2-4.dat;
+
+printf"DATA 4";
+printf"\n\n";
+
+option solver gurobi;
+solve;
+#timessss
+
+#printf"  CPU time %g\n", _ampl_elapsed_time;
+printf"  Computational Time %g\n",_ampl_user_time; 
+#printf"\n Selected Centers (J): \n";
+#for{i in Jset}{
+#	if(y[i] =1) then
+#		printf"\t %d\n", i;
+#}
+
+printf"\n Solution details: \n";
+	for{index in Jset}{
+		if (y[index] > 0) then{
+			printf"\n Center %d ", index;
+			printf"\t Townships(I): ";
+			for{terminalindex in Iset}{
+				if(x[terminalindex, index] > 0) then{
+					printf" %d \t", terminalindex ;
+				}
+			}
+		}	
+	}
+	printf"\n\n";
+printf"\n\n";
+printf "##############\n";
+
+#display x;
+
+
+reset;
+model parameters.mod;
+model q1.mod;
+
+data ass2-5.dat;
+
+printf"DATA 5";
+printf"\n\n";
+
+option solver gurobi;
+solve;
+#timessss
+
+#printf"  CPU time %g\n", _ampl_elapsed_time;
+printf"  Computational Time %g\n",_ampl_user_time; 
+#printf"\n Selected Centers (J): \n";
+#for{i in Jset}{
+#	if(y[i] =1) then
+#		printf"\t %d\n", i;
+#}
+
+printf"\n Solution details: \n";
+	for{index in Jset}{
+		if (y[index] > 0) then{
+			printf"\n Center %d ", index;
+			printf"\t Townships(I): ";
+			for{terminalindex in Iset}{
+				if(x[terminalindex, index] > 0) then{
+					printf" %d \t", terminalindex ;
+				}
+			}
+		}	
+	}
+	printf"\n\n";
+printf"\n\n";
+printf "##############\n";
+#display x;
+
+reset;
+model parameters.mod;
+model q1.mod;
+
+data ass2-6.dat;
+
+printf"DATA 6";
+printf"\n\n";
+
+option solver gurobi;
+solve;
+#timessss
+
+#printf"  CPU time %g\n", _ampl_elapsed_time;
+printf"  Computational Time %g\n",_ampl_user_time; 
+#printf"\n Selected Centers (J): \n";
+#for{i in Jset}{
+#	if(y[i] =1) then
+#		printf"\t %d\n", i;
+#}
+
+printf"\n Solution details: \n";
+	for{index in Jset}{
+		if (y[index] > 0) then{
+			printf"\n Center %d ", index;
+			printf"\t Townships(I): ";
+			for{terminalindex in Iset}{
+				if(x[terminalindex, index] > 0) then{
+					printf" %d \t", terminalindex ;
+				}
+			}
+		}	
+	}
+	printf"\n\n";
+printf"\n\n";
+printf "##############\n";
+
+#display x;
+
+

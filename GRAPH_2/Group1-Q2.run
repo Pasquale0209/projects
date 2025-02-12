@@ -1,0 +1,1357 @@
+reset; 
+
+option solver gurobi; 
+
+model parameters.mod;
+model q1.mod; 
+data ass2-1.dat; 
+
+
+printf "DATA 1\n"; 
+
+set minimum_costs default {}; 
+set minimum_distances default {};
+set served_towns default {};
+
+param min_cost_value; 
+param min_distance_value; 
+param available_capacity; 
+
+
+#AUXILIARY DISTANCES 
+param aux_d{Iset, Jset}; 
+for {i in Iset}
+{
+	for {j in Jset}
+	{
+		let aux_d[i,j] := d[i,j];
+	}
+}
+
+#AUXILIARY COSTS AND DEMAND 
+param aux_t{Iset};
+for {i in Iset}
+{
+	let aux_t[i] := t[i];
+}
+param aux_c{Jset}; 
+for {j in Jset}
+{
+	let aux_c[j] := c[j];
+}
+
+
+param flag_center; #parameter for looping through the centers
+param flag_total; 
+param served; 
+param minimum_demand; 
+
+let flag_center := 0; 
+let flag_total := 0; 
+let served := 0; 
+#WE FIND THE MINIMUM COSTS 
+
+	
+repeat { 
+	
+	
+	let min_cost_value := min{j in Jset : aux_c[j]}aux_c[j]; 
+	let minimum_costs := {j in Jset: aux_c[j] == min_cost_value};
+	#display min_cost_value; 
+	
+	
+	#WE TRY TO ADD SOME TOWNSHIPS 
+	for {facility in minimum_costs}
+	{
+		#printf "##############\n";
+		#display facility; 
+		let available_capacity := Gamma; #SET CAPACITY TO GAMMA
+		#printf "##############\n"; 
+		#WE COMPUTE THE MINIMUM DEMAND 
+		let minimum_demand := min{i in Iset diff served_towns: aux_t[i]}aux_t[i]; 
+		#display minimum_demand; 
+		let y[facility] := 1; 
+		repeat {
+			#WE EVALUATE BASED ON DISTANCE 
+			#display available_capacity; 
+			#display Iset diff served_towns; 
+			let min_distance_value := min{i in Iset diff served_towns: aux_d[i,facility] and aux_t[i] <= available_capacity}aux_d[i, facility];
+	
+			#let minimum_distances := {i in Iset: aux_d[i,facility] == min_distance_value };
+			let minimum_distances := {i in Iset diff served_towns: aux_d[i,facility] == min_distance_value };
+			#display minimum_distances;
+			#display min_distance_value; 
+			
+			if card(minimum_distances) == 0 then 
+			{
+				break;
+			} 
+	
+			for {dmd in minimum_distances}
+			{
+				#printf "##########\n";
+				#display available_capacity;
+				#display t[dmd];
+				#display dmd; 
+				#printf "##########\n";
+				#WE CHECK IN CASE OF MULTIPLE ASSIGNMENTS 
+				if t[dmd] <= available_capacity then
+				{
+					let available_capacity := available_capacity - t[dmd];
+					#UPDATE DEMAND 
+					#display facility; 
+					#display dmd; 
+					
+					let aux_d[dmd, facility] := 1000000;
+					let x[dmd, facility] := 1; 
+					let served := served + 1; 
+					let served_towns := served_towns union {dmd};
+				}
+				
+				if served == I then 
+				{
+					let flag_total := 1; 
+					break; 
+				}
+			}
+			
+			if flag_total == 1 then 
+				break; 
+			
+		} until (available_capacity <= minimum_demand);
+	
+		#printf "TOTAL TOWNS_SERVED: \n";
+		#display served; 
+		let aux_c[facility]:= 100000; 
+		
+		if flag_total == 1 then 
+			break; 
+	}
+	#display available_capacity; 
+	#printf "FIRST SERVICE FULL\n";
+
+	
+	
+	
+} until (flag_total != 0); 
+ 
+
+
+printf "FINITO PROGRAMMA\n"; 
+	
+
+printf "Heuristic objective function: \n"; 
+
+#display sum{j in Jset}c[j]*y[j]+sum{i in Iset, j in Jset}x[i,j]*d[i,j]*t[i];
+display objfun;
+
+
+printf"\n Solution details: \n";
+	for{index in Jset}{
+		if (y[index] > 0) then{
+			printf"\n Center %d ", index;
+			printf"\t Townships(I): ";
+			for{terminalindex in Iset}{
+				if(x[terminalindex, index] > 0) then{
+					printf" %d \t", terminalindex ;
+				}
+			}
+		}	
+	}
+	printf"\n\n";
+printf"\n\n";
+
+#timessss
+
+#printf"  CPU time %g\n", _ampl_elapsed_time;
+printf"  Computational Time %g\n",_ampl_user_time; 
+printf"\n\n";
+
+#COUNT1 IS THE NUMBER OF X VALUES EQUAL TO 1
+param count1;
+let count1:=0;
+
+for {i in Iset, j in Jset: x[i,j]==1}{
+	let count1:=count1+1;
+
+}
+
+#display count1;
+
+if count1 ==I then{
+	print("OK, (x[i,j]==1) == I");#all towns connected
+}
+
+param count2;
+param flage;
+let flage:=0;
+let count2:=0;
+#COUNT 2 SHOWS IF THERE IS ONLY ONE 1 PER ROW
+for {i in Iset}{
+	for{j in Jset: x[i,j]==1}{
+		let count2:=count2+1;
+	}
+	if count2!=1 then{
+		print("ERROR");
+		let flage:=1;
+	}
+	let count2:=0;
+}
+
+if flage==0 then{
+	print("ONLY 1 per row");#only one facility per town
+	printf"\n\n";
+}
+
+#see if capacity is respected
+for{j in Jset:y[j]==1}{
+	#display j;
+	#display sum{i in Iset:x[i,j]==1}t[i];
+	if sum{i in Iset:x[i,j]==1}t[i]>Gamma then 
+	{#this y cant be put to 1
+		print("errrorrrrrrrr")#see this if the capacity is not respected
+	}
+		
+}
+
+#check for y and x
+for {i in Iset}{
+	for{j in Jset}{
+		if x[i,j]==1 and y[j]==0 then
+		{
+			print("errrorrrrrrrr");#see if there is an x activated for an inactive y
+		}
+	}
+}
+
+reset; 
+
+option solver gurobi; 
+
+model parameters.mod;
+model q1.mod; 
+data ass2-2.dat; 
+printf "##############\n";
+
+printf "DATA 2\n"; 
+
+
+set minimum_costs default {}; 
+set minimum_distances default {};
+set served_towns default {};
+
+param min_cost_value; 
+param min_distance_value; 
+param available_capacity; 
+
+
+#AUXILIARY DISTANCES 
+param aux_d{Iset, Jset}; 
+for {i in Iset}
+{
+	for {j in Jset}
+	{
+		let aux_d[i,j] := d[i,j];
+	}
+}
+
+#AUXILIARY COSTS AND DEMAND 
+param aux_t{Iset};
+for {i in Iset}
+{
+	let aux_t[i] := t[i];
+}
+param aux_c{Jset}; 
+for {j in Jset}
+{
+	let aux_c[j] := c[j];
+}
+
+
+param flag_center; #parameter for looping through the centers
+param flag_total; 
+param served; 
+param minimum_demand; 
+
+let flag_center := 0; 
+let flag_total := 0; 
+let served := 0; 
+#WE FIND THE MINIMUM COSTS 
+
+	
+repeat { 
+	
+	
+	let min_cost_value := min{j in Jset : aux_c[j]}aux_c[j]; 
+	let minimum_costs := {j in Jset: aux_c[j] == min_cost_value};
+	#display min_cost_value; 
+	
+	
+	#WE TRY TO ADD SOME TOWNSHIPS 
+	for {facility in minimum_costs}
+	{
+		#printf "##############\n";
+		#display facility; 
+		let available_capacity := Gamma; #SET CAPACITY TO GAMMA
+		#printf "##############\n"; 
+		#WE COMPUTE THE MINIMUM DEMAND 
+		let minimum_demand := min{i in Iset diff served_towns: aux_t[i]}aux_t[i]; 
+		#display minimum_demand; 
+		let y[facility] := 1; 
+		repeat {
+			#WE EVALUATE BASED ON DISTANCE 
+			#display available_capacity; 
+			#display Iset diff served_towns; 
+			let min_distance_value := min{i in Iset diff served_towns: aux_d[i,facility] and aux_t[i] <= available_capacity}aux_d[i, facility];
+	
+			#let minimum_distances := {i in Iset: aux_d[i,facility] == min_distance_value };
+			let minimum_distances := {i in Iset diff served_towns: aux_d[i,facility] == min_distance_value };
+			#display minimum_distances;
+			#display min_distance_value; 
+			
+			if card(minimum_distances) == 0 then 
+			{
+				break;
+			} 
+	
+			for {dmd in minimum_distances}
+			{
+				#printf "##########\n";
+				#display available_capacity;
+				#display t[dmd];
+				#display dmd; 
+				#printf "##########\n";
+				#WE CHECK IN CASE OF MULTIPLE ASSIGNMENTS 
+				if t[dmd] <= available_capacity then
+				{
+					let available_capacity := available_capacity - t[dmd];
+					#UPDATE DEMAND 
+					#display facility; 
+					#display dmd; 
+					
+					let aux_d[dmd, facility] := 1000000;
+					let x[dmd, facility] := 1; 
+					let served := served + 1; 
+					let served_towns := served_towns union {dmd};
+				}
+				
+				if served == I then 
+				{
+					let flag_total := 1; 
+					break; 
+				}
+			}
+			
+			if flag_total == 1 then 
+				break; 
+			
+		} until (available_capacity <= minimum_demand);
+	
+		#printf "TOTAL TOWNS_SERVED: \n";
+		#display served; 
+		let aux_c[facility]:= 100000; 
+		
+		if flag_total == 1 then 
+			break; 
+	}
+	#display available_capacity; 
+	#printf "FIRST SERVICE FULL\n";
+
+	
+	
+	
+} until (flag_total != 0); 
+ 
+
+
+printf "FINITO PROGRAMMA\n"; 
+	
+
+printf "Heuristic objective function: \n"; 
+
+#display sum{j in Jset}c[j]*y[j]+sum{i in Iset, j in Jset}x[i,j]*d[i,j]*t[i];
+display objfun;
+
+
+printf"\n Solution details: \n";
+	for{index in Jset}{
+		if (y[index] > 0) then{
+			printf"\n Center %d ", index;
+			printf"\t Townships(I): ";
+			for{terminalindex in Iset}{
+				if(x[terminalindex, index] > 0) then{
+					printf" %d \t", terminalindex ;
+				}
+			}
+		}	
+	}
+	printf"\n\n";
+printf"\n\n";
+
+#timessss
+
+#printf"  CPU time %g\n", _ampl_elapsed_time;
+printf"  Computational Time %g\n",_ampl_user_time; 
+printf"\n\n";
+
+#COUNT1 IS THE NUMBER OF X VALUES EQUAL TO 1
+param count1;
+let count1:=0;
+
+for {i in Iset, j in Jset: x[i,j]==1}{
+	let count1:=count1+1;
+
+}
+
+#display count1;
+
+if count1 ==I then{
+	print("OK, (x[i,j]==1) == I");#all towns connected
+}
+
+param count2;
+param flage;
+let flage:=0;
+let count2:=0;
+#COUNT 2 SHOWS IF THERE IS ONLY ONE 1 PER ROW
+for {i in Iset}{
+	for{j in Jset: x[i,j]==1}{
+		let count2:=count2+1;
+	}
+	if count2!=1 then{
+		print("ERROR");
+		let flage:=1;
+	}
+	let count2:=0;
+}
+
+if flage==0 then{
+	print("ONLY 1 per row");#only one facility per town
+	printf"\n\n";
+}
+
+#see if capacity is respected
+for{j in Jset:y[j]==1}{
+	#display j;
+	#display sum{i in Iset:x[i,j]==1}t[i];
+	if sum{i in Iset:x[i,j]==1}t[i]>Gamma then 
+	{#this y cant be put to 1
+		print("errrorrrrrrrr")#see this if the capacity is not respected
+	}
+		
+}
+#check for y and x
+for {i in Iset}{
+	for{j in Jset}{
+		if x[i,j]==1 and y[j]==0 then
+		{
+			print("errrorrrrrrrr");#see if there is an x activated for an inactive y
+		}
+	}
+}
+
+reset; 
+
+option solver gurobi; 
+
+model parameters.mod;
+model q1.mod; 
+data ass2-3.dat;
+printf "##############\n";
+
+printf "DATA 3\n"; 
+ 
+
+set minimum_costs default {}; 
+set minimum_distances default {};
+set served_towns default {};
+
+param min_cost_value; 
+param min_distance_value; 
+param available_capacity; 
+
+
+#AUXILIARY DISTANCES 
+param aux_d{Iset, Jset}; 
+for {i in Iset}
+{
+	for {j in Jset}
+	{
+		let aux_d[i,j] := d[i,j];
+	}
+}
+
+#AUXILIARY COSTS AND DEMAND 
+param aux_t{Iset};
+for {i in Iset}
+{
+	let aux_t[i] := t[i];
+}
+param aux_c{Jset}; 
+for {j in Jset}
+{
+	let aux_c[j] := c[j];
+}
+
+
+param flag_center; #parameter for looping through the centers
+param flag_total; 
+param served; 
+param minimum_demand; 
+
+let flag_center := 0; 
+let flag_total := 0; 
+let served := 0; 
+#WE FIND THE MINIMUM COSTS 
+
+	
+repeat { 
+	
+	
+	let min_cost_value := min{j in Jset : aux_c[j]}aux_c[j]; 
+	let minimum_costs := {j in Jset: aux_c[j] == min_cost_value};
+	#display min_cost_value; 
+	
+	
+	#WE TRY TO ADD SOME TOWNSHIPS 
+	for {facility in minimum_costs}
+	{
+		#printf "##############\n";
+		#display facility; 
+		let available_capacity := Gamma; #SET CAPACITY TO GAMMA
+		#printf "##############\n"; 
+		#WE COMPUTE THE MINIMUM DEMAND 
+		let minimum_demand := min{i in Iset diff served_towns: aux_t[i]}aux_t[i]; 
+		#display minimum_demand; 
+		let y[facility] := 1; 
+		repeat {
+			#WE EVALUATE BASED ON DISTANCE 
+			#display available_capacity; 
+			#display Iset diff served_towns; 
+			let min_distance_value := min{i in Iset diff served_towns: aux_d[i,facility] and aux_t[i] <= available_capacity}aux_d[i, facility];
+	
+			#let minimum_distances := {i in Iset: aux_d[i,facility] == min_distance_value };
+			let minimum_distances := {i in Iset diff served_towns: aux_d[i,facility] == min_distance_value };
+			#display minimum_distances;
+			#display min_distance_value; 
+			
+			if card(minimum_distances) == 0 then 
+			{
+				break;
+			} 
+	
+			for {dmd in minimum_distances}
+			{
+				#printf "##########\n";
+				#display available_capacity;
+				#display t[dmd];
+				#display dmd; 
+				#printf "##########\n";
+				#WE CHECK IN CASE OF MULTIPLE ASSIGNMENTS 
+				if t[dmd] <= available_capacity then
+				{
+					let available_capacity := available_capacity - t[dmd];
+					#UPDATE DEMAND 
+					#display facility; 
+					#display dmd; 
+					
+					let aux_d[dmd, facility] := 1000000;
+					let x[dmd, facility] := 1; 
+					let served := served + 1; 
+					let served_towns := served_towns union {dmd};
+				}
+				
+				if served == I then 
+				{
+					let flag_total := 1; 
+					break; 
+				}
+			}
+			
+			if flag_total == 1 then 
+				break; 
+			
+		} until (available_capacity <= minimum_demand);
+	
+		#printf "TOTAL TOWNS_SERVED: \n";
+		#display served; 
+		let aux_c[facility]:= 100000; 
+		
+		if flag_total == 1 then 
+			break; 
+	}
+	#display available_capacity; 
+	#printf "FIRST SERVICE FULL\n";
+
+	
+	
+	
+} until (flag_total != 0); 
+ 
+
+
+printf "FINITO PROGRAMMA\n"; 
+	
+
+printf "Heuristic objective function: \n"; 
+
+#display sum{j in Jset}c[j]*y[j]+sum{i in Iset, j in Jset}x[i,j]*d[i,j]*t[i];
+display objfun;
+
+
+printf"\n Solution details: \n";
+	for{index in Jset}{
+		if (y[index] > 0) then{
+			printf"\n Center %d ", index;
+			printf"\t Townships(I): ";
+			for{terminalindex in Iset}{
+				if(x[terminalindex, index] > 0) then{
+					printf" %d \t", terminalindex ;
+				}
+			}
+		}	
+	}
+	printf"\n\n";
+printf"\n\n";
+
+#timessss
+
+#printf"  CPU time %g\n", _ampl_elapsed_time;
+printf"  Computational Time %g\n",_ampl_user_time; printf"\n\n";
+
+#COUNT1 IS THE NUMBER OF X VALUES EQUAL TO 1
+param count1;
+let count1:=0;
+
+for {i in Iset, j in Jset: x[i,j]==1}{
+	let count1:=count1+1;
+
+}
+
+#display count1;
+
+if count1 ==I then{
+	print("OK, (x[i,j]==1) == I");#all towns connected
+}
+
+param count2;
+param flage;
+let flage:=0;
+let count2:=0;
+#COUNT 2 SHOWS IF THERE IS ONLY ONE 1 PER ROW
+for {i in Iset}{
+	for{j in Jset: x[i,j]==1}{
+		let count2:=count2+1;
+	}
+	if count2!=1 then{
+		print("ERROR");
+		let flage:=1;
+	}
+	let count2:=0;
+}
+
+if flage==0 then{
+	print("ONLY 1 per row");#only one facility per town
+	printf"\n\n";
+}
+
+#see if capacity is respected
+for{j in Jset:y[j]==1}{
+	#display j;
+	#display sum{i in Iset:x[i,j]==1}t[i];
+	if sum{i in Iset:x[i,j]==1}t[i]>Gamma then 
+	{#this y cant be put to 1
+		print("errrorrrrrrrr")#see this if the capacity is not respected
+	}
+		
+}
+
+#check for y and x
+for {i in Iset}{
+	for{j in Jset}{
+		if x[i,j]==1 and y[j]==0 then
+		{
+			print("errrorrrrrrrr");#see if there is an x activated for an inactive y
+		}
+	}
+}
+
+reset; 
+
+option solver gurobi; 
+
+model parameters.mod;
+model q1.mod; 
+data ass2-4.dat; 
+printf "##############\n";
+
+printf "DATA 4\n"; 
+
+
+set minimum_costs default {}; 
+set minimum_distances default {};
+set served_towns default {};
+
+param min_cost_value; 
+param min_distance_value; 
+param available_capacity; 
+
+
+#AUXILIARY DISTANCES 
+param aux_d{Iset, Jset}; 
+for {i in Iset}
+{
+	for {j in Jset}
+	{
+		let aux_d[i,j] := d[i,j];
+	}
+}
+
+#AUXILIARY COSTS AND DEMAND 
+param aux_t{Iset};
+for {i in Iset}
+{
+	let aux_t[i] := t[i];
+}
+param aux_c{Jset}; 
+for {j in Jset}
+{
+	let aux_c[j] := c[j];
+}
+
+
+param flag_center; #parameter for looping through the centers
+param flag_total; 
+param served; 
+param minimum_demand; 
+
+let flag_center := 0; 
+let flag_total := 0; 
+let served := 0; 
+#WE FIND THE MINIMUM COSTS 
+
+	
+repeat { 
+	
+	
+	let min_cost_value := min{j in Jset : aux_c[j]}aux_c[j]; 
+	let minimum_costs := {j in Jset: aux_c[j] == min_cost_value};
+	#display min_cost_value; 
+	
+	
+	#WE TRY TO ADD SOME TOWNSHIPS 
+	for {facility in minimum_costs}
+	{
+		#printf "##############\n";
+		#display facility; 
+		let available_capacity := Gamma; #SET CAPACITY TO GAMMA
+		#printf "##############\n"; 
+		#WE COMPUTE THE MINIMUM DEMAND 
+		let minimum_demand := min{i in Iset diff served_towns: aux_t[i]}aux_t[i]; 
+		#display minimum_demand; 
+		let y[facility] := 1; 
+		repeat {
+			#WE EVALUATE BASED ON DISTANCE 
+			#display available_capacity; 
+			#display Iset diff served_towns; 
+			let min_distance_value := min{i in Iset diff served_towns: aux_d[i,facility] and aux_t[i] <= available_capacity}aux_d[i, facility];
+	
+			#let minimum_distances := {i in Iset: aux_d[i,facility] == min_distance_value };
+			let minimum_distances := {i in Iset diff served_towns: aux_d[i,facility] == min_distance_value };
+			#display minimum_distances;
+			#display min_distance_value; 
+			
+			if card(minimum_distances) == 0 then 
+			{
+				break;
+			} 
+	
+			for {dmd in minimum_distances}
+			{
+				#printf "##########\n";
+				#display available_capacity;
+				#display t[dmd];
+				#display dmd; 
+				#printf "##########\n";
+				#WE CHECK IN CASE OF MULTIPLE ASSIGNMENTS 
+				if t[dmd] <= available_capacity then
+				{
+					let available_capacity := available_capacity - t[dmd];
+					#UPDATE DEMAND 
+					#display facility; 
+					#display dmd; 
+					
+					let aux_d[dmd, facility] := 1000000;
+					let x[dmd, facility] := 1; 
+					let served := served + 1; 
+					let served_towns := served_towns union {dmd};
+				}
+				
+				if served == I then 
+				{
+					let flag_total := 1; 
+					break; 
+				}
+			}
+			
+			if flag_total == 1 then 
+				break; 
+			
+		} until (available_capacity <= minimum_demand);
+	
+		#printf "TOTAL TOWNS_SERVED: \n";
+		#display served; 
+		let aux_c[facility]:= 100000; 
+		
+		if flag_total == 1 then 
+			break; 
+	}
+	#display available_capacity; 
+	#printf "FIRST SERVICE FULL\n";
+
+	
+	
+	
+} until (flag_total != 0); 
+ 
+
+
+printf "FINITO PROGRAMMA\n"; 
+	
+
+printf "Heuristic objective function: \n"; 
+
+#display sum{j in Jset}c[j]*y[j]+sum{i in Iset, j in Jset}x[i,j]*d[i,j]*t[i];
+display objfun;
+
+
+printf"\n Solution details: \n";
+	for{index in Jset}{
+		if (y[index] > 0) then{
+			printf"\n Center %d ", index;
+			printf"\t Townships(I): ";
+			for{terminalindex in Iset}{
+				if(x[terminalindex, index] > 0) then{
+					printf" %d \t", terminalindex ;
+				}
+			}
+		}	
+	}
+	printf"\n\n";
+printf"\n\n";
+
+#timessss
+
+#printf"  CPU time %g\n", _ampl_elapsed_time;
+printf"  Computational Time %g\n",_ampl_user_time; 
+printf"\n\n";
+
+#COUNT1 IS THE NUMBER OF X VALUES EQUAL TO 1
+param count1;
+let count1:=0;
+
+for {i in Iset, j in Jset: x[i,j]==1}{
+	let count1:=count1+1;
+
+}
+
+#display count1;
+
+if count1 ==I then{
+	print("OK, (x[i,j]==1) == I");#all towns connected
+}
+
+param count2;
+param flage;
+let flage:=0;
+let count2:=0;
+#COUNT 2 SHOWS IF THERE IS ONLY ONE 1 PER ROW
+for {i in Iset}{
+	for{j in Jset: x[i,j]==1}{
+		let count2:=count2+1;
+	}
+	if count2!=1 then{
+		print("ERROR");
+		let flage:=1;
+	}
+	let count2:=0;
+}
+
+if flage==0 then{
+	print("ONLY 1 per row");#only one facility per town
+	printf"\n\n";
+}
+
+#see if capacity is respected
+for{j in Jset:y[j]==1}{
+	#display j;
+	#display sum{i in Iset:x[i,j]==1}t[i];
+	if sum{i in Iset:x[i,j]==1}t[i]>Gamma then 
+	{#this y cant be put to 1
+		print("errrorrrrrrrr")#see this if the capacity is not respected
+	}
+		
+}
+#check for y and x
+for {i in Iset}{
+	for{j in Jset}{
+		if x[i,j]==1 and y[j]==0 then
+		{
+			print("errrorrrrrrrr");#see if there is an x activated for an inactive y
+		}
+	}
+}
+
+reset; 
+
+option solver gurobi; 
+
+model parameters.mod;
+model q1.mod; 
+data ass2-5.dat; 
+printf "##############\n";
+
+printf "DATA 5\n"; 
+
+
+set minimum_costs default {}; 
+set minimum_distances default {};
+set served_towns default {};
+
+param min_cost_value; 
+param min_distance_value; 
+param available_capacity; 
+
+
+#AUXILIARY DISTANCES 
+param aux_d{Iset, Jset}; 
+for {i in Iset}
+{
+	for {j in Jset}
+	{
+		let aux_d[i,j] := d[i,j];
+	}
+}
+
+#AUXILIARY COSTS AND DEMAND 
+param aux_t{Iset};
+for {i in Iset}
+{
+	let aux_t[i] := t[i];
+}
+param aux_c{Jset}; 
+for {j in Jset}
+{
+	let aux_c[j] := c[j];
+}
+
+
+param flag_center; #parameter for looping through the centers
+param flag_total; 
+param served; 
+param minimum_demand; 
+
+let flag_center := 0; 
+let flag_total := 0; 
+let served := 0; 
+#WE FIND THE MINIMUM COSTS 
+
+	
+repeat { 
+	
+	
+	let min_cost_value := min{j in Jset : aux_c[j]}aux_c[j]; 
+	let minimum_costs := {j in Jset: aux_c[j] == min_cost_value};
+	#display min_cost_value; 
+	
+	
+	#WE TRY TO ADD SOME TOWNSHIPS 
+	for {facility in minimum_costs}
+	{
+		#printf "##############\n";
+		#display facility; 
+		let available_capacity := Gamma; #SET CAPACITY TO GAMMA
+		#printf "##############\n"; 
+		#WE COMPUTE THE MINIMUM DEMAND 
+		let minimum_demand := min{i in Iset diff served_towns: aux_t[i]}aux_t[i]; 
+		#display minimum_demand; 
+		let y[facility] := 1; 
+		repeat {
+			#WE EVALUATE BASED ON DISTANCE 
+			#display available_capacity; 
+			#display Iset diff served_towns; 
+			let min_distance_value := min{i in Iset diff served_towns: aux_d[i,facility] and aux_t[i] <= available_capacity}aux_d[i, facility];
+	
+			#let minimum_distances := {i in Iset: aux_d[i,facility] == min_distance_value };
+			let minimum_distances := {i in Iset diff served_towns: aux_d[i,facility] == min_distance_value };
+			#display minimum_distances;
+			#display min_distance_value; 
+			
+			if card(minimum_distances) == 0 then 
+			{
+				break;
+			} 
+	
+			for {dmd in minimum_distances}
+			{
+				#printf "##########\n";
+				#display available_capacity;
+				#display t[dmd];
+				#display dmd; 
+				#printf "##########\n";
+				#WE CHECK IN CASE OF MULTIPLE ASSIGNMENTS 
+				if t[dmd] <= available_capacity then
+				{
+					let available_capacity := available_capacity - t[dmd];
+					#UPDATE DEMAND 
+					#display facility; 
+					#display dmd; 
+					
+					let aux_d[dmd, facility] := 1000000;
+					let x[dmd, facility] := 1; 
+					let served := served + 1; 
+					let served_towns := served_towns union {dmd};
+				}
+				
+				if served == I then 
+				{
+					let flag_total := 1; 
+					break; 
+				}
+			}
+			
+			if flag_total == 1 then 
+				break; 
+			
+		} until (available_capacity <= minimum_demand);
+	
+		#printf "TOTAL TOWNS_SERVED: \n";
+		#display served; 
+		let aux_c[facility]:= 100000; 
+		
+		if flag_total == 1 then 
+			break; 
+	}
+	#display available_capacity; 
+	#printf "FIRST SERVICE FULL\n";
+
+	
+	
+	
+} until (flag_total != 0); 
+ 
+
+
+printf "FINITO PROGRAMMA\n"; 
+	
+
+printf "Heuristic objective function: \n"; 
+
+#display sum{j in Jset}c[j]*y[j]+sum{i in Iset, j in Jset}x[i,j]*d[i,j]*t[i];
+display objfun;
+
+
+printf"\n Solution details: \n";
+	for{index in Jset}{
+		if (y[index] > 0) then{
+			printf"\n Center %d ", index;
+			printf"\t Townships(I): ";
+			for{terminalindex in Iset}{
+				if(x[terminalindex, index] > 0) then{
+					printf" %d \t", terminalindex ;
+				}
+			}
+		}	
+	}
+	printf"\n\n";
+printf"\n\n";
+
+#timessss
+
+#printf"  CPU time %g\n", _ampl_elapsed_time;
+printf"  Computational Time %g\n",_ampl_user_time; 
+printf"\n\n";
+
+#COUNT1 IS THE NUMBER OF X VALUES EQUAL TO 1
+param count1;
+let count1:=0;
+
+for {i in Iset, j in Jset: x[i,j]==1}{
+	let count1:=count1+1;
+
+}
+
+#display count1;
+
+if count1 ==I then{
+	print("OK, (x[i,j]==1) == I");#all towns connected
+}
+
+param count2;
+param flage;
+let flage:=0;
+let count2:=0;
+#COUNT 2 SHOWS IF THERE IS ONLY ONE 1 PER ROW
+for {i in Iset}{
+	for{j in Jset: x[i,j]==1}{
+		let count2:=count2+1;
+	}
+	if count2!=1 then{
+		print("ERROR");
+		let flage:=1;
+	}
+	let count2:=0;
+}
+
+if flage==0 then{
+	print("ONLY 1 per row");#only one facility per town
+	printf"\n\n";
+}
+
+#see if capacity is respected
+for{j in Jset:y[j]==1}{
+	#display j;
+	#display sum{i in Iset:x[i,j]==1}t[i];
+	if sum{i in Iset:x[i,j]==1}t[i]>Gamma then 
+	{#this y cant be put to 1
+		print("errrorrrrrrrr")#see this if the capacity is not respected
+	}
+		
+}
+
+#check for y and x
+for {i in Iset}{
+	for{j in Jset}{
+		if x[i,j]==1 and y[j]==0 then
+		{
+			print("errrorrrrrrrr");#see if there is an x activated for an inactive y
+		}
+	}
+}
+
+reset; 
+
+option solver gurobi; 
+
+model parameters.mod;
+model q1.mod; 
+data ass2-6.dat; 
+printf "##############\n";
+
+printf "DATA 6\n"; 
+
+
+set minimum_costs default {}; 
+set minimum_distances default {};
+set served_towns default {};
+
+param min_cost_value; 
+param min_distance_value; 
+param available_capacity; 
+
+
+#AUXILIARY DISTANCES 
+param aux_d{Iset, Jset}; 
+for {i in Iset}
+{
+	for {j in Jset}
+	{
+		let aux_d[i,j] := d[i,j];
+	}
+}
+
+#AUXILIARY COSTS AND DEMAND 
+param aux_t{Iset};
+for {i in Iset}
+{
+	let aux_t[i] := t[i];
+}
+param aux_c{Jset}; 
+for {j in Jset}
+{
+	let aux_c[j] := c[j];
+}
+
+
+param flag_center; #parameter for looping through the centers
+param flag_total; 
+param served; 
+param minimum_demand; 
+
+let flag_center := 0; 
+let flag_total := 0; 
+let served := 0; 
+#WE FIND THE MINIMUM COSTS 
+
+	
+repeat { 
+	
+	
+	let min_cost_value := min{j in Jset : aux_c[j]}aux_c[j]; 
+	let minimum_costs := {j in Jset: aux_c[j] == min_cost_value};
+	#display min_cost_value; 
+	
+	
+	#WE TRY TO ADD SOME TOWNSHIPS 
+	for {facility in minimum_costs}
+	{
+		#printf "##############\n";
+		#display facility; 
+		let available_capacity := Gamma; #SET CAPACITY TO GAMMA
+		#printf "##############\n"; 
+		#WE COMPUTE THE MINIMUM DEMAND 
+		let minimum_demand := min{i in Iset diff served_towns: aux_t[i]}aux_t[i]; 
+		#display minimum_demand; 
+		let y[facility] := 1; 
+		repeat {
+			#WE EVALUATE BASED ON DISTANCE 
+			#display available_capacity; 
+			#display Iset diff served_towns; 
+			let min_distance_value := min{i in Iset diff served_towns: aux_d[i,facility] and aux_t[i] <= available_capacity}aux_d[i, facility];
+	
+			#let minimum_distances := {i in Iset: aux_d[i,facility] == min_distance_value };
+			let minimum_distances := {i in Iset diff served_towns: aux_d[i,facility] == min_distance_value };
+			#display minimum_distances;
+			#display min_distance_value; 
+			
+			if card(minimum_distances) == 0 then 
+			{
+				break;
+			} 
+	
+			for {dmd in minimum_distances}
+			{
+				#printf "##########\n";
+				#display available_capacity;
+				#display t[dmd];
+				#display dmd; 
+				#printf "##########\n";
+				#WE CHECK IN CASE OF MULTIPLE ASSIGNMENTS 
+				if t[dmd] <= available_capacity then
+				{
+					let available_capacity := available_capacity - t[dmd];
+					#UPDATE DEMAND 
+					#display facility; 
+					#display dmd; 
+					
+					let aux_d[dmd, facility] := 1000000;
+					let x[dmd, facility] := 1; 
+					let served := served + 1; 
+					let served_towns := served_towns union {dmd};
+				}
+				
+				if served == I then 
+				{
+					let flag_total := 1; 
+					break; 
+				}
+			}
+			
+			if flag_total == 1 then 
+				break; 
+			
+		} until (available_capacity <= minimum_demand);
+	
+		#printf "TOTAL TOWNS_SERVED: \n";
+		#display served; 
+		let aux_c[facility]:= 100000; 
+		
+		if flag_total == 1 then 
+			break; 
+	}
+	#display available_capacity; 
+	#printf "FIRST SERVICE FULL\n";
+
+	
+	
+	
+} until (flag_total != 0); 
+ 
+
+
+printf "FINITO PROGRAMMA\n"; 
+	
+
+printf "Heuristic objective function: \n"; 
+
+#display sum{j in Jset}c[j]*y[j]+sum{i in Iset, j in Jset}x[i,j]*d[i,j]*t[i];
+display objfun;
+
+
+printf"\n Solution details: \n";
+	for{index in Jset}{
+		if (y[index] > 0) then{
+			printf"\n Center %d ", index;
+			printf"\t Townships(I): ";
+			for{terminalindex in Iset}{
+				if(x[terminalindex, index] > 0) then{
+					printf" %d \t", terminalindex ;
+				}
+			}
+		}	
+	}
+	printf"\n\n";
+printf"\n\n";
+
+#timessss
+
+#printf"  CPU time %g\n", _ampl_elapsed_time;
+printf"  Computational Time %g\n",_ampl_user_time; 
+printf"\n\n";
+
+#COUNT1 IS THE NUMBER OF X VALUES EQUAL TO 1
+param count1;
+let count1:=0;
+
+for {i in Iset, j in Jset: x[i,j]==1}{
+	let count1:=count1+1;
+
+}
+
+#display count1;
+
+if count1 ==I then{
+	print("OK, (x[i,j]==1) == I");#all towns connected
+}
+
+param count2;
+param flage;
+let flage:=0;
+let count2:=0;
+#COUNT 2 SHOWS IF THERE IS ONLY ONE 1 PER ROW
+for {i in Iset}{
+	for{j in Jset: x[i,j]==1}{
+		let count2:=count2+1;
+	}
+	if count2!=1 then{
+		print("ERROR");
+		let flage:=1;
+	}
+	let count2:=0;
+}
+
+if flage==0 then{
+	print("ONLY 1 per row");#only one facility per town
+	printf"\n\n";
+}
+
+#see if capacity is respected
+for{j in Jset:y[j]==1}{
+	#display j;
+	#display sum{i in Iset:x[i,j]==1}t[i];
+	if sum{i in Iset:x[i,j]==1}t[i]>Gamma then 
+	{#this y cant be put to 1
+		print("errrorrrrrrrr")#see this if the capacity is not respected
+	}
+		
+}
+
+#check for y and x
+for {i in Iset}{
+	for{j in Jset}{
+		if x[i,j]==1 and y[j]==0 then
+		{
+			print("errrorrrrrrrr");#see if there is an x activated for an inactive y
+		}
+	}
+}

@@ -1,0 +1,486 @@
+reset; 
+
+option solver gurobi; 
+
+model parameters.mod;
+#model q4.mod; 
+#data ass2-1.dat; 
+#data ass2-2.dat; 
+#data ass2-3.dat; 
+#data ass2-4.dat; 
+#data ass2-5.dat; 
+data ass2-6.dat;  
+
+
+#printf "DATA 1\n"; 
+
+set minimum_costs default {}; 
+set minimum_distances default {};
+set served_towns default {};
+
+param min_cost_value; 
+param min_distance_value; 
+param available_capacity; 
+
+
+#AUXILIARY DISTANCES 
+param aux_d{Iset, Jset}; 
+for {i in Iset}
+{
+	for {j in Jset}
+	{
+		let aux_d[i,j] := d[i,j];
+	}
+}
+
+#AUXILIARY COSTS AND DEMAND 
+param aux_t{Iset};
+for {i in Iset}
+{
+	let aux_t[i] := t[i];
+}
+param aux_c{Jset}; 
+for {j in Jset}
+{
+	let aux_c[j] := c[j];
+}
+
+
+param flag_center; #parameter for looping through the centers
+param flag_total; 
+param served; 
+param minimum_demand; 
+
+let flag_center := 0; 
+let flag_total := 0; 
+let served := 0; 
+
+
+#/*
+
+param mind;
+param dmin{Iset} default 0; #THIS IS A LIST OF THE INDEXES OF THE CLOSEST FACILITY FOR EVERY TOWN
+# dmin[town] = will give you the index of the facility with the minimum distance 
+param finito; #this is a flag 
+param maxd; #is the maximum distance 
+param miny; #the minimum number of why 
+# if we need to switch off more than miny facilities then we will stop the code 
+# and consider it unfeasible 
+
+
+param n_zeros; 
+let n_zeros := 0; # we'll use this to stop the code when is total - n_zeros < miny 
+param y_zero{Jset} default 0; # if 1 the facility must be put to zero
+param unf; #flag for unfeasibility 
+
+############################################
+#COMPUTING THE MAXIMUM DISTANCE GLOBALLY 
+let maxd:=0;
+for {i in Iset}{
+	for {j in Jset}{
+		if d[i,j]>maxd then{
+			let maxd:=d[i,j];
+		}
+	}
+}
+##############################################
+model q4.mod; 
+
+#Get the min number of facilities to support the towns, if the t's are equally distributed
+let miny:=ceil(sum{i in Iset}t[i]/Gamma);
+#printf "Rounded up: %.2f\n", miny;
+
+#/*
+
+let finito:=0;#
+let unf:=0; #still feasible
+repeat{
+	
+	let finito:=1;
+	#compute the matrix of min Distance facility for each town
+	for{i in Iset}{
+		let mind:=maxd*2;#big distance
+		for{j in Jset}{
+			if aux_d[i,j]<mind then {
+				let mind:=aux_d[i,j];#store the min distance value
+				let dmin[i]:=j; #store the index j == the facility with the min distance, if y[i]==1
+			}
+		}
+	}
+
+	#verify if some facility dont have capacity for its closest towns
+	for{j in Jset}{
+		
+		#display sum{i in Iset:dmin[i]==j}t[i];
+		#display Gamma;
+		if sum{i in Iset:dmin[i]==j}t[i]>Gamma then 
+		{
+			let n_zeros := n_zeros + 1; #increment the counter 
+			#this y cant be put to 1
+			let y_zero[j]:=1;#ADD to list of unfeasible y
+			let finito:=0;#has to do another loop of the while
+			for {i in Iset}{
+				#the aux d to a high value
+				let aux_d[i,j]:=maxd*3;
+			
+			}
+			
+		}
+	}
+	
+	if J - n_zeros < miny then 
+	{
+		#UNFEASIBLE, the unfeasibility may have happen before, but here for sure it is unfeasible
+		let finito:=1;
+		let unf:=1;
+	}
+
+}until(finito==1);
+
+#param doo;
+#let doo:=0;
+
+if unf==1 then {#If this happens, it's for sure unfeasible
+	print("UNFEASIBLE");
+	printf"\n\n";
+	#let doo:=1;
+}else{
+	print("MAYBE FEASIBLE");
+	printf"\n\n";
+}
+#display dmin;
+
+
+
+######################
+
+for {i in Iset}
+{
+	let x[i,dmin[i]] := 1;
+}
+
+for {j in Jset}{
+	if y_zero[j]==0 and sum{i in Iset: dmin[i]==j}1 >= 1 then{
+		let y[j]:=1;
+	}else{
+		let y[j]:=0;
+	}
+}
+
+
+printf "FINITO PROGRAMMA 1\n"; 
+	
+
+printf "Heuristic objective function (GREEDY): \n"; 
+
+#display sum{j in Jset}c[j]*y[j]+sum{i in Iset, j in Jset}x[i,j]*d[i,j]*t[i];
+display objfun;
+
+
+printf"\n Solution details: \n";
+	for{index in Jset}{
+		if (y[index] > 0) then{
+			printf"\n Center %d ", index;
+			printf"\t Townships(I): ";
+			for{terminalindex in Iset}{
+				if(x[terminalindex, index] > 0) then{
+					printf" %d \t", terminalindex ;
+				}
+			}
+		}	
+	}
+	printf"\n\n";
+printf"\n\n";
+
+
+#timessss
+
+#printf"  CPU time %g\n", _ampl_elapsed_time;
+#printf"  Computational Time %g\n",_ampl_user_time; 
+printf"\n\n";
+
+
+
+############
+#LOCAL SEARCH
+
+#BUILDING AUXILIARY Y AND X
+param aux_x{Iset, Jset}; 
+for {i in Iset}{
+	for {j in Jset}
+	{
+		let aux_x[i,j] := x[i,j];
+	}
+}
+param aux_y{Jset};
+param y_off; 
+let y_off := 0; 
+for {j in Jset}
+{
+	let aux_y[j] := y[j]; 
+}
+param aux_dd{Iset, Jset}; 
+
+#solve; 
+param flag; 
+let flag := 0; 
+param flag_x; 
+param break_counter; 
+let break_counter := 0; 
+#display objfun;
+param to_improve; 
+let to_improve := objfun;  
+
+repeat 
+{
+	#printf "REPEATING THE MOVE\n";  
+	let break_counter := 0; 
+	if J - n_zeros < miny then 
+	{
+		let flag := 1; 
+		continue; 
+	}
+	for {j in Jset}
+	{	
+		#RESETTING THE DISTANCES
+		for {i in Iset}
+		{
+			for {k in Jset}
+			{
+				let aux_dd[i,k] := aux_d[i,k];  
+			}
+		}
+		##############################
+		let flag_x := 0; 
+		if y[j] == 1 then 
+		{
+			
+			#display j; 
+			#changing one y
+			let y_zero[j] := 1;	  #	SWITCH OFF Y 
+			let unf:=0; #still feasible
+			#compute the matrix of min Distance facility for each town
+			for{i in Iset}{
+				let mind:=maxd*2;#big distance
+				for{k in Jset:y_zero[k]==0}{
+					if aux_dd[i,k]<mind then {
+						let mind:=aux_dd[i,k];#store the min distance value
+						let dmin[i]:=k; #store the index j == the facility with the min distance, if y[i]==1
+					}
+				}
+			}
+			#verify if some facility dont have capacity for its closest towns
+			for{k in Jset}{
+				#display sum{i in Iset:dmin[i]==j}t[i];
+				#display Gamma;
+				if sum{i in Iset:dmin[i]==k}t[i]>Gamma then 
+				{
+					let flag_x := 1; 
+					#printf "UNFEASIBLE\n";
+					let break_counter := break_counter + 1; 
+					break;			
+				}
+			}
+			if break_counter == sum{k in Jset: y_zero[k] == 0}1 then{
+				#printf "NO IMPROVEMENT IN NEIGHBOR\n"; 
+				let flag:=1; 
+				break; 
+			}
+			if flag_x == 0 then 
+			{
+				#CHECK IF IT IS IMPROVING
+				for {i in Iset}
+				{
+					for {k in Jset}
+					{
+						if dmin[i] == k then 
+						{
+							let x[i,k] := 1;
+						}
+						else 
+						{
+							let x[i,k] := 0; 
+						}
+					}
+				}
+	
+				for {k in Jset}{
+					if y_zero[k]==0 and sum{i in Iset: dmin[i]==k}1 >= 1 then{
+						let y[k]:=1;
+					}else{
+						let y[k]:=0;
+					}
+				}
+				if objfun < to_improve then 
+				{	
+					#printf "IMPROVEE\n"; 
+					#SAVE THE NEW DATA
+					let to_improve := objfun; 
+					let y_off := j; 
+					#display y_off; 
+					for {i in Iset}
+					{
+						for {k in Jset}
+						{
+							let aux_x[i,k] := x[i,k];
+						}
+					}
+					
+					for {k in Jset}
+					{
+						let aux_y[k] := y[k];
+					}
+					
+				}
+				else 
+				{
+					let break_counter := break_counter + 1; 
+				}
+			}
+			let y_zero[j] := 0;
+		}
+		
+	}
+	if flag == 0 then {
+		let n_zeros := n_zeros +1;
+		if y_off != 0 then {
+			let y[y_off] := 0;
+			let y_zero[y_off] := 1; 
+	 
+	 	}
+	 }
+	 
+
+} until (flag != 0); 
+#display to_improve; 
+for {i in Iset}
+{
+	for {k in Jset}
+	{
+		let x[i,k] := aux_x[i,k];
+	}
+}
+
+for {k in Jset}
+{
+	let y[k] := aux_y[k];
+}
+
+#display objfun; 
+
+printf "FINITO PROGRAMMA \n"; 
+	
+
+printf "Heuristic objective function (LOCAL SEARCH): \n"; 
+
+#display sum{j in Jset}c[j]*y[j]+sum{i in Iset, j in Jset}x[i,j]*d[i,j]*t[i];
+display objfun;
+
+
+printf"\n Solution details: \n";
+	for{index in Jset}{
+		if (y[index] > 0) then{
+			printf"\n Center %d ", index;
+			printf"\t Townships(I): ";
+			for{terminalindex in Iset}{
+				if(x[terminalindex, index] > 0) then{
+					printf" %d \t", terminalindex ;
+				}
+			}
+		}	
+	}
+	printf"\n\n";
+printf"\n\n";
+
+
+#timessss
+
+#printf"  CPU time %g\n", _ampl_elapsed_time;
+printf"  Computational Time %g\n",_ampl_user_time; 
+printf"\n\n";
+
+
+#COUNT1 IS THE NUMBER OF X VALUES EQUAL TO 1
+param count1;
+let count1:=0;
+
+for {i in Iset, j in Jset: x[i,j]==1}{
+	let count1:=count1+1;
+
+}
+
+#display count1;
+
+if count1 ==I then{
+	print("OK, (x[i,j]==1) == I");#all towns connected
+}
+
+param count2;
+param flage;
+let flage:=0;
+let count2:=0;
+#COUNT 2 SHOWS IF THERE IS ONLY ONE 1 PER ROW
+for {i in Iset}{
+	for{j in Jset: x[i,j]==1}{
+		let count2:=count2+1;
+	}
+	if count2!=1 then{
+		print("ERROR");
+		let flage:=1;
+	}
+	let count2:=0;
+}
+
+if flage==0 then{
+	print("ONLY 1 per row");#only one facility per town
+	printf"\n\n";
+}
+
+#see if capacity is respected
+for{j in Jset:y[j]==1}{
+	#display j;
+	#display sum{i in Iset:x[i,j]==1}t[i];
+	if sum{i in Iset:x[i,j]==1}t[i]>Gamma then 
+	{#this y cant be put to 1
+		print("errrorrrrrrrr")
+	}
+		
+}
+
+param mintd;
+let mintd:=0;
+
+
+
+#see if min is respected
+for{i in Iset}{
+	let mintd:=10000000000;
+	if y[dmin[i]]==0 then {
+		for {j in Jset:y[j]==1 and x[i,j]==1}{
+			let mintd:=d[i,j];
+			#display mintd;
+			#display j;
+		}
+		for {j in Jset:y[j]==1}{
+			if d[i,j]<mintd then {
+				
+				print("ERRRRRRRRRR");
+				display j;
+				break;
+			}
+		}
+	}
+}
+#check for y and x
+for {i in Iset}{
+	for{j in Jset}{
+		if x[i,j]==1 and y[j]==0 then
+		{
+			print("errrorrrrrrrr");#see if there is an x activated for an inactive y
+			break;
+		}
+	}
+}
+
+printf "##############\n";
+

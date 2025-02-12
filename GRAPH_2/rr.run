@@ -1,0 +1,69 @@
+#COUNT1 IS THE NUMBER OF X VALUES EQUAL TO 1
+#param count1;
+let count1:=0;
+
+for {i in Iset, j in Jset: x[i,j]==1}{
+	let count1:=count1+1;
+
+}
+
+#display count1;
+
+if count1 ==I then{
+	print("OK, (x[i,j]==1) == I");#all towns connected
+}
+
+#param count2;
+#param flage;
+let flage:=0;
+let count2:=0;
+#COUNT 2 SHOWS IF THERE IS ONLY ONE 1 PER ROW
+for {i in Iset}{
+	for{j in Jset: x[i,j]==1}{
+		let count2:=count2+1;
+	}
+	if count2!=1 then{
+		print("ERROR");
+		let flage:=1;
+	}
+	let count2:=0;
+}
+
+if flage==0 then{
+	print("ONLY 1 per row");#only one facility per town
+	printf"\n\n";
+}
+
+#see if capacity is respected
+for{j in Jset:y[j]==1}{
+	display j;
+	display sum{i in Iset:x[i,j]==1}t[i];
+	if sum{i in Iset:x[i,j]==1}t[i]>Gamma then 
+	{#this y cant be put to 1
+		print("errrorrrrrrrr")
+	}
+		
+}
+
+#param mintd;
+
+#see if min is respected
+for{i in Iset}{
+	#if y[dmin[i]]==0 then {
+		for {j in Jset:y[j]==1 and x[i,j]==1}{
+			let mintd:=d[i,j];
+			#display mintd;
+			#display j;
+		}
+		for {j in Jset:y[j]==1}{
+			if d[i,j]<mintd then {
+				
+				print("ERRRRRRRRRR");
+				display j;
+				break;
+			}
+		}
+	#}
+}
+
+printf "##############\n";
